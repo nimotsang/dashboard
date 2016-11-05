@@ -4,11 +4,11 @@
    License MIT
 */
 var SecurityManager = {
-    salt: 'rz8LuOtFBXphj9WQfvFh',
+    salt: '9dTLtQ6H3AlyiI3nWghM',
     username: localStorage['SecurityManager.username'],
     key: localStorage['SecurityManager.key'],
     ip: null,
-
+    updatepassword:null,
     generate: function (username, password) {
         // Generates a token to be used for API calls. The first time during authentication, pass in a username/password. All subsequent calls can simply omit username and password, as the same token key (hashed password) will be used.
         if (username && password) {
@@ -66,9 +66,9 @@ var SecurityManager = {
         var result = '';
 
         $.ajax({
-            url: 'http://localhost/token/ip',
+            url: 'https://mbeta.pw/mocdbapi/api/ip/index',
+            async:false,
             method: 'GET',
-            async: false,
             success: function (ip) {
                 result = ip;
             }
