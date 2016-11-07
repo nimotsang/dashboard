@@ -4,7 +4,7 @@
         ajax: {
 
             "edit": {
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant",
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
@@ -21,7 +21,7 @@
             },
             "create": {
 
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant",
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
@@ -95,7 +95,7 @@
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant",
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant",
             "data": {
                 "token": SecurityManager.generate(),
                 "username": SecurityManager.username
@@ -109,7 +109,7 @@
         },
 
          language: {
-             url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
+             url: "../vendor/datatables/Chinese.json",
              select:{
                  rows:{
                      _: "已选中 %d 行",

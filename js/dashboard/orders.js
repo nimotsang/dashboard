@@ -2,7 +2,7 @@
     var editor = new $.fn.dataTable.Editor({
 
       ajax: {
-              "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentOrder",
+              "url": sysSettings.domainPath + "RaymSP_GatewayPaymentOrder",
               "type": "POST",
               "async": true,
               "crossDomain": true,
@@ -13,7 +13,7 @@
                       "method": 2,
                       "storeid": Number(editor.field('store_id').val()),
                       "ordernumber": editor.field('OrderNumber').val(),
-                      "paymentmethod": editor.field('PaymentMethod').val(),
+                      "MethodTypeJoin": editor.field('MethodTypeJoin').val(),
                       "statusdescription": editor.field('Status').val()
                   }
                   return param;
@@ -65,7 +65,7 @@
             { label: '订单描述: ', name: 'subject' },
             { label: '订单金额: ', name: 'TotalAmount' },
             { label: '客户姓名: ', name: 'CustomerName' },
-            { label: '支付方式: ', name: 'PaymentMethod' }
+            { label: '支付方式: ', name: 'MethodTypeJoin' }
 
         ],
         //自定义语言
@@ -83,7 +83,7 @@
         }
     });
 
-    editor.disable(['store_name', 'OrderNumber', 'OrderType', 'OrderDate', 'subject', 'TotalAmount', 'CustomerName', 'PaymentMethod']);
+    editor.disable(['store_name', 'OrderNumber', 'OrderType', 'OrderDate', 'subject', 'TotalAmount', 'CustomerName', 'MethodTypeJoin']);
     editor.hide('store_id');
     editor.on('postSubmit', function (e, json) {
         json.data = json.ResultSets[0]
@@ -105,10 +105,10 @@
         { "data": "TotalAmount" },
         { "data": "CustomerName" },
         { "data": "Status" },
-        { "data": "PaymentMethod" }
+        { "data": "MethodTypeJoin" }
         ],
         ajax: {
-            "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentOrder",
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentOrder",
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -125,7 +125,7 @@
         },
 
          language: {
-             url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
+             url: "../vendor/datatables/Chinese.json",
              select:{
                  rows:{
                      _: "已选中 %d 行",
