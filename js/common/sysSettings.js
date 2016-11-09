@@ -1,6 +1,6 @@
 ﻿// DB Web API Server 
 var sysSettings ={
-    "domainPath": "https://mbeta.pw/mocdbapi/"
+    "domainPath": "http://desktop-idhm2sh/mocdbapi/"
 };
 
 function checkname(value) {

@@ -4,7 +4,7 @@
     $("#submit").click(function () {
         // Login as the user and create a token key.
         var u = $("#username").val();
-        var p = $("#password").val();
+        var p = CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([$("#password").val(), SecurityManager.salt].join(':'), SecurityManager.salt));
         if (u === "") {
             alert("账号输入为空");
             return false;
@@ -16,7 +16,7 @@
             type: "POST",
             "async": true,
             "crossDomain": true,
-            url: 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentLogin/',
+            url: sysSettings.domainPath + "/RaymSP_GatewayPaymentLogin/",
             data: {
                 "token": SecurityManager.generate(),
                 "username":SecurityManager.username
@@ -78,15 +78,7 @@
             } else if (p !== p1) {
                 alert("两次密码输入不相同");
                 return false;
-            } /**else {
-        SecurityManager.generate(u, p);
-
-        $.get('http://desktop-idhm2sh/token/api/find?q=' + '&token=' + SecurityManager.generate(), function (data) {
-            var names = data.join(', ');
-            window.location = "index.html";
-        }).fail(function (error) {
-            alert("用户名或者密码错误！");
-        });}**/
+            } 
         });
     })
 

@@ -66,7 +66,7 @@ var SecurityManager = {
         var result = '';
 
         $.ajax({
-            url: 'https://mbeta.pw/mocdbapi/api/ip/index',
+            url: sysSettings.domainPath + 'api/ip/index',
             async:false,
             method: 'GET',
             success: function (ip) {

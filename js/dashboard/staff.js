@@ -30,7 +30,7 @@
                             "StoreName": editor.field('StoreName').val(),
                             "UserCode": editor.field('UserCode').val(),
                             "Name": editor.field('UserName').val(),
-                            "PassWord": editor.field('PassWord').val(),
+                            "PassWord": CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([editor.field('PassWord').val(), SecurityManager.salt].join(':'), SecurityManager.salt)),
                             "PositionName": editor.field('PositionName').val()
                         }
                         SecurityManager.updatepassword = editor.field('PassWord').val()
@@ -52,7 +52,7 @@
                         "StoreName": editor.field('StoreName').val(),
                         "UserCode": editor.field('UserCode').val(),
                         "Name": editor.field('UserName').val(),
-                        "PassWord": editor.field('PassWord').val(),
+                        "PassWord": CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([editor.field('PassWord').val(), SecurityManager.salt].join(':'), SecurityManager.salt)),
                         "PositionName": editor.field('PositionName').val()
                     }
                     return param;
