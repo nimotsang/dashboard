@@ -33,7 +33,6 @@
                             "PassWord": CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([editor.field('PassWord').val(), SecurityManager.salt].join(':'), SecurityManager.salt)),
                             "PositionName": editor.field('PositionName').val()
                         }
-                        SecurityManager.updatepassword = editor.field('PassWord').val()
                         return param;
                     }
 
@@ -130,10 +129,18 @@
 
     });
 
-    editor.on('postSubmit', function (e, json) {
+    editor.on('postSubmit', function (e, json,data,action) {
         json.data = json.ResultSets[0]
-        SecurityManager.generate(SecurityManager.username, SecurityManager.updatepassword)
-        SecurityManager.updatepassword = null;
+        if (action === 'edit') {
+            for (var i in data.data) {
+                if (data.data[i].PassWord !== openValPassWord && SecurityManager.username === data.data[i].UserName) {
+                    SecurityManager.logout()
+                    window.location = "login.html"
+                    return alert("密码已经更新，请重新登录！");
+                }
+            }
+
+        }
     });
 
     var openValPassWord;

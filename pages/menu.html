@@ -3,14 +3,6 @@
 
 <head>
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>支付网关管理系统后台beta</title>
-
     <!-- Bootstrap Core CSS -->
     <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
@@ -19,8 +11,9 @@
 
     <!-- Custom CSS -->
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
-    
+        
     <!-- Custom Fonts -->
+    <link href="../dist/css/main.css" rel="stylesheet">
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
     <!-- DataTables CSS -->
@@ -145,16 +138,28 @@
                                 <li>
                                     <a href="Orders.html">订单状态管理</a>
                                 </li>
+                                <li>
+                                    <a href="refund.html">退款申请管理</a>
+                                </li>
                             </ul>
                         </li>
                         <li>
-                            <a href="#"><i class="fa fa-check-circle fa-fw"></i> 对账管理<span class="fa arrow"></span></a>
+                            <a href="#"><i class="fa fa-eye fa-fw"></i> 对账管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="checking.html">对账记录管理</a>
                                 </li>
                             </ul>
                         </li>
+                        <li>
+                            <a href="#"><i class="fa fa-check-circle fa-fw"></i> 结算管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="settlement.html">结算查询</a>
+                                </li>
+                            </ul>
+                        </li>
+
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->
@@ -199,7 +204,6 @@
     <script src="../js/common/enc-base64.js"></script>
     <script src="../js/security.js"></script>
     <script src="../js/script.js"></script>
-
 </body>
 
 </html>

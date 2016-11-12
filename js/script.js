@@ -1,4 +1,14 @@
-﻿$(document).ready(function () {
+﻿// Login check for each page.
+$("div#wrapper").each(function () {
+
+    if (!SecurityManager.username) {
+        window.location = "login.html";
+
+    };
+
+});
+
+$(document).ready(function () {
 
     // Login click events.
     $("#submit").click(function () {
@@ -43,16 +53,6 @@
 
 
         });
-
-        $("div#wrapper").each(function () {
-            // Clear the token key and delete localStorage settings.
-            if (!SecurityManager.username) {
-                window.location = "login.html";
-
-            };
-
-        });
-
 
         $("li.hide").hide();
 

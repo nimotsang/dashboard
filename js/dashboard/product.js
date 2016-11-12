@@ -4,7 +4,7 @@
         ajax: {
 
             "edit": {
-                "url": sysSettings.domainPath + "Raymsp_Product_Generate",
+                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
@@ -22,7 +22,7 @@
             },
             "create": {
 
-                "url": sysSettings.domainPath + "Raymsp_Product_Generate",
+                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
                 "type": "POST",
                 "data": function () {
                     var param = {
@@ -136,7 +136,7 @@
             { "width": "20%", "targets": 0 }
         ], **/
         ajax: {
-            "url": sysSettings.domainPath + "Raymsp_FindProduct_Page",
+            "url": sysSettings.domainPath + "Raymsp_GatewaypaymentProduct_Query",
             "type": "POST",
             "async": true,
             "crossDomain": true,
