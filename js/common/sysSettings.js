@@ -1,6 +1,7 @@
 ﻿// DB Web API Server 
 var sysSettings ={
-    "domainPath": "http://desktop-idhm2sh/mocdbapi/"
+    //"domainPath": "http://desktop-idhm2sh/mocdbapi/"
+    "domainPath": "https://localhost:44395/"
 };
 
 function checkname(value) {

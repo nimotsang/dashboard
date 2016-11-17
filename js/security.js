@@ -69,6 +69,8 @@ var SecurityManager = {
             async:false,
             method: 'GET',
             success: function (ip) {
+                if (ip = "127.0.0.1")
+                { ip = "::1"; }
                 result = ip;
             }
         });
