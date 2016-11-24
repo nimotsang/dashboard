@@ -90,6 +90,17 @@
 
     });
 
+    editor.on('open', function () {
+        $('div.modal-dialog').addClass('multi-column');
+        $('div.DTE_Body').addClass('multi-column-body');
+        $( 'div.DTE_Field').addClass('multi-column-feild');
+    });
+
+    editor.on('close', function () {
+//        $('div.modal-dialog').removeClass('multi-column');
+//        $('div.DTE_Field').removeClass('multi-column-feild');
+    });
+
     //初始化报表
     var table=$("#StoreTable").DataTable({
         processing:false,

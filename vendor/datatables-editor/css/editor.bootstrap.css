@@ -588,3 +588,37 @@ div.editor-datetime div.editor-datetime-iconDown {
   height: 20px;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAALCAMAAABf9c24AAAAFVBMVEX///99fX1+fn57e3t6enoAAAAAAAC73bqPAAAABnRSTlMAYmJkZt92bnysAAAAMElEQVR4AWOgDmBiRQIsmPKMrGxQgJDFlEfIYpoPk8Utz8qM232MYFfhkQfKUg8AANefAQxecJ58AAAAAElFTkSuQmCC");
 }
+
+
+
+div.multi-column {
+
+    width: 50%;
+    height:auto;
+    position:relative;
+}
+
+div.multi-column-body{
+
+    float:left;
+    border-bottom:2px solid #e5e5e5;
+    bottom:5px;
+}
+
+div.multi-column-feild {
+    float: left;
+    width: 50%;
+
+    clear: none;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box; /* Firefox */
+    -webkit-box-sizing:border-box; /* Safari */
+}
+ 
+div.multi-column-feild:after {
+    content: ' ';
+    display: block;
+    clear: both;
+}
+
+
