@@ -21,9 +21,10 @@
     <!-- DataTables Extensions CSS -->
     <link href="../vendor/datatables-button/css/buttons.bootstrap.min.css" rel="stylesheet">
     <link href="../vendor/datatables-select/css/select.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendor/datatables-keytable/css/keyTable.bootstrap.min.css" rel="stylesheet">
 
     <!-- DataTables Editor CSS -->
-    <link href="../vendor/datatables-editor/css/editor.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendor/datatables-editor/css/editor.bootstrap.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -109,10 +110,28 @@
                             <a href="#"><i class="fa fa-tags fa-fw"></i> 商品管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
-                                    <a href="product.html">产品管理</a>
+                                    <a href="product.html">产品管理<span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+                                        <li>
+                                            <a href="product.html">产品管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="product2.html">产品管理2</a>
+                                        </li>
+                                        <li>
+                                            <a href="price.html">价格管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="sku.html">SKU管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="status.html">状态管理</a>
+                                        </li>
+                                    </ul>
+                                    <!-- /.nav-third-level -->
                                 </li>
                                 <li>
-                                    <a href="vendor.html">供应商管理</a>
+                                    <a href="supplier.html">供应商管理</a>
                                 </li>
                                 <li>
                                     <a href="hierarchy.html">产品层级管理</a>
@@ -195,6 +214,7 @@
     <script src="../vendor/datatables-select/js/dataTables.select.min.js"></script>
     <script src="../vendor/datatables-button/js/dataTables.buttons.min.js"></script>
     <script src="../vendor/datatables-button/js/buttons.bootstrap.min.js"></script>
+    <script src="../vendor/datatables-keytable/js/dataTables.keyTable.min.js"></script>
     <script src="../js/common/jszip.min.js"></script>
     <script src="../vendor/datatables-button/js/buttons.html5.min.js"></script>
     <script src="../vendor/datatables-button/js/buttons.print.min.js"></script>

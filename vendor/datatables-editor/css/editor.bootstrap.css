@@ -590,7 +590,7 @@ div.editor-datetime div.editor-datetime-iconDown {
 }
 
 
-
+/* Dashboard customized CSS panel */
 div.multi-column {
 
     width: 50%;
@@ -601,7 +601,7 @@ div.multi-column {
 div.multi-column-body{
 
     float:left;
-    border-bottom:2px solid #e5e5e5;
+    border-bottom:1px solid #e5e5e5;
     bottom:5px;
 }
 
@@ -622,3 +622,37 @@ div.multi-column-feild:after {
 }
 
 
+div.product-column {
+
+    width: 75%;
+    height:auto;
+    position:relative;
+}
+
+div.product-column-body{
+
+    float:left;
+    border-bottom:1px solid #e5e5e5;
+    bottom:5px;
+}
+
+div.product-column-feild {
+    float: left;
+    width: 50%;
+
+    clear: none;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box; /* Firefox */
+    -webkit-box-sizing:border-box; /* Safari */
+}
+ 
+div.product-column-feild:after {
+    content: ' ';
+    display: block;
+    clear: both;
+}
+/* FOr Editor Field Inline Mode*/
+td.editable {
+        font-weight: bold;
+        width:20%;
+    }

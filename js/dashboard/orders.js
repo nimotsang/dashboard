@@ -97,8 +97,8 @@
     });
 
     editor.on('close', function () {
-//        $('div.modal-dialog').removeClass('multi-column');
-//        $('div.DTE_Field').removeClass('multi-column-feild');
+        $('div.modal-dialog').removeClass('multi-column');
+        $('div.DTE_Field').removeClass('multi-column-feild');
     });
 
     //初始化报表

@@ -8,8 +8,17 @@ $("div#wrapper").each(function () {
 
 });
 
+
+
 $(document).ready(function () {
 
+    $("div#login").each(function () {
+
+        if (!SecurityManager.username) {
+            SecurityManager.getIp();
+
+        };
+    });
     // Login click events.
     $("#submit").click(function () {
         // Login as the user and create a token key.

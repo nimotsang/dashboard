@@ -34,7 +34,7 @@
         loadjscssfile("../vendor/datatables/css/dataTables.bootstrap.min.css", "css");
         loadjscssfile("../vendor/datatables-button/css/buttons.bootstrap.min.css", "css");
         loadjscssfile("../vendor/datatables-select/css/select.bootstrap.min.css", "css");
-        loadjscssfile("../vendor/datatables-editor/css/editor.bootstrap.min.css", "css");
+        loadjscssfile("../vendor/datatables-editor/css/editor.bootstrap.css", "css");
         loadjscssfile("../dist/css/main.css", "css");
 
         document.writeln("  <div id=\'navi\'>");
@@ -89,35 +89,7 @@
         document.writeln("        </nav>");
         document.writeln("        </div>");
 
-        //    loadjscssfile("https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js", "js");
-        //    loadjscssfile("https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js", "js");
 
-
-
-        loadjscssfile("../vendor/jquery/jquery.min.js", "js");
-        loadjscssfile("../vendor/bootstrap/js/bootstrap.min.js", "js");
-        loadjscssfile("../vendor/metisMenu/metisMenu.min.js", "js");
-        loadjscssfile("../dist/js/sb-admin-2.js", "js");
-        loadjscssfile("../vendor/datatables/js/jquery.dataTables.min.js", "js");
-        loadjscssfile("../vendor/datatables/js/dataTables.bootstrap.min.js", "js");
-        loadjscssfile("../vendor/datatables-editor/js/dataTables.editor.min.js", "js");
-        loadjscssfile("../vendor/datatables-editor/js/editor.bootstrap.min.js", "js");
-        loadjscssfile("../vendor/datatables-select/js/dataTables.select.min.js", "js");
-        loadjscssfile("../vendor/datatables-button/js/dataTables.buttons.min.js", "js");
-        loadjscssfile("../vendor/datatables-button/js/buttons.bootstrap.min.js", "js");
-        loadjscssfile("../js/common/jszip.min.js", "js");
-        loadjscssfile("../vendor/datatables-button/js/buttons.html5.min.js", "js");
-        loadjscssfile("../vendor/datatables-button/js/buttons.print.min.js", "js");
-
-        //DMS JavaScript 
-        loadjscssfile("../js/common/hmac-sha256.js", "js");
-        loadjscssfile("../js/common/enc-base64.js", "js");
-        loadjscssfile("../js/security.js", "js");
-        loadjscssfile("../js/script.js", "js");
-    }
-    catch (ex)
-    { alert('menu.js_writeln' + ex); }
-    try {
         function creat_New(tag, type, val) {
             var element = document.createElement(tag);
             element.setAttribute(type, val);
@@ -168,8 +140,32 @@
         addnav_sec('对账记录管理', '5', 'checking.html');
         addnav_fa('结算管理', 'fa-check-circle', '6');
         addnav_sec('结算查询', '6', 'settlement.html');
+
+  //    loadjscssfile("https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js", "js");
+  //    loadjscssfile("https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js", "js");
+
+        loadjscssfile("../vendor/jquery/jquery.min.js", "js");
+        loadjscssfile("../vendor/bootstrap/js/bootstrap.min.js", "js");
+        loadjscssfile("../vendor/metisMenu/metisMenu.min.js", "js");
+        loadjscssfile("../dist/js/sb-admin-2.js", "js");
+        loadjscssfile("../vendor/datatables/js/jquery.dataTables.min.js", "js");
+        loadjscssfile("../vendor/datatables/js/dataTables.bootstrap.min.js", "js");
+        loadjscssfile("../vendor/datatables-editor/js/dataTables.editor.min.js", "js");
+        loadjscssfile("../vendor/datatables-editor/js/editor.bootstrap.min.js", "js");
+        loadjscssfile("../vendor/datatables-select/js/dataTables.select.min.js", "js");
+        loadjscssfile("../vendor/datatables-button/js/dataTables.buttons.min.js", "js");
+        loadjscssfile("../vendor/datatables-button/js/buttons.bootstrap.min.js", "js");
+        loadjscssfile("../js/common/jszip.min.js", "js");
+        loadjscssfile("../vendor/datatables-button/js/buttons.html5.min.js", "js");
+        loadjscssfile("../vendor/datatables-button/js/buttons.print.min.js", "js");
+
+        //DMS JavaScript 
+        loadjscssfile("../js/common/hmac-sha256.js", "js");
+        loadjscssfile("../js/common/enc-base64.js", "js");
+        loadjscssfile("../js/security.js", "js");
+        loadjscssfile("../js/script.js", "js");
     }
     catch (ex)
-    { alert('menu.js_add' + ex); }
+    { alert('menu.js_writeln' + ex); }
 }
 

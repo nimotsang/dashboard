@@ -21,8 +21,8 @@ var SecurityManager = {
         // Set the key to a hash of the user's password + salt.
         SecurityManager.key = SecurityManager.key || CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([password, SecurityManager.salt].join(':'), SecurityManager.salt));
 
-        // Set the client IP address.
-        SecurityManager.ip = SecurityManager.ip || SecurityManager.getIp();
+        // Set the client IP address.         // **Add GetIP ahead on login page **
+        //SecurityManager.ip = SecurityManager.ip || SecurityManager.getIp();
 
         // Persist key pieces.
         if (SecurityManager.username) {
@@ -53,7 +53,8 @@ var SecurityManager = {
     },
 
     logout: function () {
-        SecurityManager.ip = null;
+        // **Add GetIP ahead on login page **
+        //SecurityManager.ip = null;
 
         sessionStorage.removeItem('SecurityManager.username');
         SecurityManager.username = null;
@@ -67,10 +68,12 @@ var SecurityManager = {
 
         $.ajax({
             url: sysSettings.domainPath + 'api/ip/index',
-            async:false,
+            async:true,
             method: 'GET',
             success: function (ip) {
+                SecurityManager.ip = ip;
                 result = ip;
+
             }
         });
 

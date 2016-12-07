@@ -155,10 +155,10 @@
     //初始化报表
     var table=$("#CheckingTable").DataTable({
         processing: false,
-        
+        lengthChange: false,
 
         fnDraw:true,
-        dom:'Bfrtip',
+        //dom:'Bfrtip',
         select: true,
         order: [[1, "asc"]],
         columns: [
@@ -172,16 +172,41 @@
             }
         
         }},
-        { "data": "OrderType" },
-        { "data": "Gatewaypaymentmethod" },
-        { "data": "GatewayPaymentMethodType" },
-        { "data": "TradeStatus" },
+        {
+            "data": "Source", "render": function (data, type, row) {
+                return row.OrderType + '' + row.StoreName;
+            }
+        },
+        {
+            "data": "Method", "render": function (data, type, row) {
+                return row.Gatewaypaymentmethod + '' + row.GatewayPaymentMethodType;
+            }
+        },
+        {
+            "data": "TradeStatus", "render": function (data, type, row) {
+                if (row.TradeStatus === 'SUCCESS') {
+                    return '成功';
+                }else{
+                    return TradeStatus;
+                }
+
+            }
+        },
+        { "data": "Bank" },
         { "data": "TradeNo", "class": "wordwrap" },
         { "data": "OrderNumber"},
-        { "data": "TotalAmount" },
+        {
+            "data": "TotalAmount", "render": function (data, type, row) {
+                return Number(row.TotalAmount).formatMoney();
+            }
+        },
         { "data": "ProductName" },
         { "data": "Customer" },
-        { "data": "Fee" },
+        {
+            "data": "Fee", "render": function (data, type, row) {
+                return Number(row.Fee).formatMoney();
+            }
+        },
         { "data": "Rate" },
         ],
         "columnDefs": [
@@ -189,7 +214,7 @@
            { "width": "5%", "targets": 1 },
            { "width": "7%", "targets": 2 },
            { "width": "7%", "targets": 3 },
-           { "width": "5%", "targets": 4 },
+           { "width": "7%", "targets": 4 },
            { "width": "14%", "targets": 5 },
            { "width": "10%", "targets": 6 },
            { "width": "10%", "targets": 7 },
@@ -222,29 +247,38 @@
                      _: "已选中 %d 行",
                      0:""
                      }
-                 }
+             },
+             buttons:{
+                 copyTitle: '复制数据',
+                 copySuccess: '已复制 %d 行'
+    }
          },
             //添加按键 编辑，打印及导出
          buttons: [
              //{ extend: 'create', editor: editor, text: '新建' },
              //{ extend: 'edit', editor: editor, text: '修改' },
              { extend:'create',editor:editor,text:'下载对账单'},
-             { extend: "print", text: '打印',autoPrint:true },
+             { extend: "print", text: '打印', autoPrint: true },
+             { extend: "colvis", text: '显示/隐藏'},
+             { extend: "copyHtml5", text: '复制'},
              {
                  extend: 'collection',
                  text: '导出到..',
                  buttons: [
                      'excel',
-                     'csv'
-                 ],
+                     'csv',
+                 ]
                  
-             }
-             
+             },
 
 
-         ]
+         ],
+         initComplete: function () {
+             table.buttons().container().appendTo('#CheckingTable_wrapper .col-sm-6:eq(0)');
+         }
         
     });
+
     //table.ajax.data.clear();
     //table.ajax.reload().draw();
     //table.init();
