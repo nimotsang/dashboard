@@ -1,16 +1,6 @@
 div.DTE {
   position: relative;
 }
-div.DTE div.DTE_Processing_Indicator {
-  position: absolute;
-  top: 10px;
-  right: 13px;
-  height: 32px;
-  width: 32px;
-  background: url("../images/ajax-loader.gif") no-repeat top left;
-  display: none;
-  z-index: 20;
-}
 div.DTE div.DTE_Header {
   position: absolute;
   top: 0;
@@ -37,6 +27,9 @@ div.DTE div.DTE_Footer {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
+}
+div.DTE div.DTE_Body {
+  position: relative;
 }
 div.DTE div.DTE_Form_Info {
   margin-bottom: 0.5em;
@@ -233,17 +226,28 @@ div.DTE_Field input[type="week"] {
   padding: 6px 4px;
   width: 100%;
 }
-div.DTE_Field div.DTE_Field_Info,
-div.DTE_Field div.DTE_Field_Message {
-  font-size: 11px;
-  line-height: 1em;
+div.DTE_Field label div.DTE_Label_Info {
+  font-size: 0.85em;
+  margin-top: 0.25em;
 }
+div.DTE_Field label div.DTE_Label_Info:empty {
+  margin-top: 0;
+}
+div.DTE_Field div.DTE_Field_Info,
+div.DTE_Field div.DTE_Field_Message,
 div.DTE_Field div.DTE_Field_Error {
   font-size: 11px;
   line-height: 1em;
-  display: none;
-  color: red;
   margin-top: 5px;
+}
+div.DTE_Field div.DTE_Field_Info:empty,
+div.DTE_Field div.DTE_Field_Message:empty,
+div.DTE_Field div.DTE_Field_Error:empty {
+  margin-top: 0;
+}
+div.DTE_Field div.DTE_Field_Error {
+  display: none;
+  color: #b11f1f;
 }
 div.DTE_Field div.multi-value {
   display: none;
@@ -259,8 +263,24 @@ div.DTE_Field div.multi-value span {
   display: block;
   color: #666;
 }
+div.DTE_Field div.multi-value.multi-noEdit {
+  border: 1px solid #ccc;
+  cursor: auto;
+  background-color: #fcfcfc;
+}
+div.DTE_Field div.multi-value.multi-noEdit:hover {
+  background-color: #fcfcfc;
+}
 div.DTE_Field div.multi-value:hover {
   background-color: #f1f1f1;
+}
+div.DTE_Field.disabled {
+  color: grey;
+}
+div.DTE_Field.disabled div.multi-value {
+  cursor: default;
+  border: 1px dotted #aaa;
+  background-color: transparent;
 }
 div.DTE_Field div.multi-restore {
   display: none;
@@ -633,15 +653,16 @@ div.DTE_Inline div.DTE_Field input[type="url"],
 div.DTE_Inline div.DTE_Field input[type="week"] {
   margin: -6px 0;
 }
-div.DTE_Inline.DTE_Processing:after {
-  position: absolute;
-  content: ' ';
-  display: block;
-  top: 4px;
-  right: 10px;
-  height: 12px;
-  width: 17px;
-  background: url("../images/ajax-loader-small.gif") no-repeat top left;
+div.DTE_Inline div.DTE_Field_Error,
+div.DTE_Inline div.DTE_Form_Error {
+  font-size: 11px;
+  line-height: 1.2em;
+  padding: 0;
+  margin-top: 10px;
+}
+div.DTE_Inline div.DTE_Field_Error.empty,
+div.DTE_Inline div.DTE_Form_Error.empty {
+  margin-top: 0;
 }
 
 span.dtr-data div.DTE_Inline {
@@ -845,23 +866,14 @@ div.DTED_Envelope_Wrapper {
   display: none;
   overflow: hidden;
 }
-div.DTED_Envelope_Wrapper div.DTED_Envelope_ShadowLeft {
+div.DTED_Envelope_Wrapper div.DTED_Envelope_Shadow {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 50%;
-  height: 9px;
-  background: url("../images/shadow_left.png") no-repeat top left;
+  top: -10px;
+  left: 10px;
+  right: 10px;
+  height: 10px;
   z-index: 10;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_ShadowRight {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 50%;
-  height: 9px;
-  background: url("../images/shadow_right.png") no-repeat top right;
-  z-index: 10;
+  box-shadow: 0 0 20px black;
 }
 div.DTED_Envelope_Wrapper div.DTED_Envelope_Container {
   position: absolute;
@@ -1263,4 +1275,90 @@ div.editor-datetime div.editor-datetime-iconUp {
 div.editor-datetime div.editor-datetime-iconDown {
   height: 20px;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAALCAMAAABf9c24AAAAFVBMVEX///99fX1+fn57e3t6enoAAAAAAAC73bqPAAAABnRSTlMAYmJkZt92bnysAAAAMElEQVR4AWOgDmBiRQIsmPKMrGxQgJDFlEfIYpoPk8Utz8qM232MYFfhkQfKUg8AANefAQxecJ58AAAAAElFTkSuQmCC");
+}
+
+div.editor-datetime-error {
+  padding: 0 1em;
+  max-width: 240px;
+  font-size: 11px;
+  line-height: 1.25em;
+  text-align: center;
+  color: #b11f1f;
+}
+
+div.DTE div.DTE_Processing_Indicator {
+  position: absolute;
+  top: 17px;
+  right: 9px;
+  height: 2em;
+  width: 2em;
+  z-index: 20;
+  font-size: 12px;
+  display: none;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+div.DTE.processing div.DTE_Processing_Indicator {
+  display: block;
+}
+div.DTE.DTE_Inline div.DTE_Processing_Indicator {
+  top: 5px;
+  right: 6px;
+  font-size: 6px;
+}
+div.DTE.DTE_Bubble div.DTE_Processing_Indicator {
+  top: 10px;
+  right: 14px;
+  font-size: 8px;
+}
+div.DTE div.DTE_Processing_Indicator span,
+div.DTE div.DTE_Processing_Indicator:before,
+div.DTE div.DTE_Processing_Indicator:after {
+  display: block;
+  background: black;
+  width: 0.5em;
+  height: 1.5em;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.1);
+  -webkit-animation: editorProcessing 0.9s infinite ease-in-out;
+  animation: editorProcessing 0.9s infinite ease-in-out;
+}
+div.DTE div.DTE_Processing_Indicator:before,
+div.DTE div.DTE_Processing_Indicator:after {
+  position: absolute;
+  top: 0;
+  content: '';
+}
+div.DTE div.DTE_Processing_Indicator:before {
+  left: -1em;
+  -webkit-animation-delay: -0.3s;
+  animation-delay: -0.3s;
+}
+div.DTE div.DTE_Processing_Indicator span {
+  -webkit-animation-delay: -0.15s;
+  animation-delay: -0.15s;
+}
+div.DTE div.DTE_Processing_Indicator:after {
+  left: 1em;
+}
+@-webkit-keyframes editorProcessing {
+  0%,
+		80%,
+		100% {
+    transform: scale(1, 1);
+  }
+  40% {
+    transform: scale(1, 1.5);
+  }
+}
+@keyframes editorProcessing {
+  0%,
+		80%,
+		100% {
+    transform: scale(1, 1);
+  }
+  40% {
+    transform: scale(1, 1.5);
+  }
 }

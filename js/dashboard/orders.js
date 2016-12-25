@@ -6,6 +6,8 @@
               "type": "POST",
               "async": true,
               "crossDomain": true,
+              "dataType": "json",
+              "contentType": "application/json; charset=utf-8",
               "data": function () {
                   var param = {
                       "token": SecurityManager.generate(),
@@ -13,10 +15,10 @@
                       "method": 2,
                       "storeid": Number(editor.field('store_id').val()),
                       "ordernumber": editor.field('OrderNumber').val(),
-                      "MethodTypeJoin": editor.field('MethodTypeJoin').val(),
+                      "MethodTypeJoin": editor.field('GatewayPaymentStorePaymentMethod').val(),
                       "statusdescription": editor.field('Status').val()
                   }
-                  return param;
+                  return JSON.stringify(param);
               }
         },
 
@@ -65,7 +67,8 @@
             { label: '订单描述: ', name: 'subject' },
             { label: '订单金额: ', name: 'TotalAmount' },
             { label: '客户姓名: ', name: 'CustomerName' },
-            { label: '支付方式: ', name: 'MethodTypeJoin' }
+            { label: '支付方式: ', name: 'MethodTypeJoin' },
+            { label: '支付方式: ', name: 'GatewayPaymentStorePaymentMethod' }
 
         ],
         //自定义语言
@@ -84,7 +87,7 @@
     });
 
     editor.disable(['store_name', 'OrderNumber', 'OrderType', 'OrderDate', 'subject', 'TotalAmount', 'CustomerName', 'MethodTypeJoin']);
-    editor.hide('store_id');
+    editor.hide(['store_id','GatewayPaymentStorePaymentMethod']);
     editor.on('postSubmit', function (e, json) {
         json.data = json.ResultSets[0]
 
@@ -120,14 +123,18 @@
         ],
         ajax: {
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentOrder",
-            "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc":function (data) {
                 data = data.ResultSets[0]
                 return data;

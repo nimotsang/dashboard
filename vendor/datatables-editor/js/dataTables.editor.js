@@ -1,4 +1,4 @@
-/*! DataTables Editor v1.5.6
+/*! DataTables Editor v1.6.0
  *
  * ©2012-2016 SpryMedia Ltd, all rights reserved.
  * License: editor.datatables.net/license
@@ -7,7 +7,7 @@
 /**
  * @summary     DataTables Editor
  * @description Table editing library for DataTables
- * @version     1.5.6
+ * @version     1.6.0
  * @file        dataTables.editor.js
  * @author      SpryMedia Ltd
  * @contact     www.datatables.net/contact
@@ -118,6 +118,91 @@ var _pluck = function ( a, prop )
 	return out;
 };
 
+// The file and file methods are common on both the DataTables and Editor APIs
+// so rather than writing the same methods twice, they are defined once here and
+// assigned as required.
+var _api_file = function ( name, id )
+{
+	var table = this.files( name ); // can throw. `this` will be Editor or
+	var file = table[ id ];         //  DataTables.Api context. Both work.
+
+	if ( ! file ) {
+		throw 'Unknown file id '+ id +' in table '+ name;
+	}
+
+	return table[ id ];
+};
+
+var _api_files = function ( name )
+{
+	if ( ! name ) {
+		return Editor.files;
+	}
+
+	var table = Editor.files[ name ];
+
+	if ( ! table ) {
+		throw 'Unknown file table name: '+ name;
+	}
+
+	return table;
+};
+
+/**
+ * Get the keys of an object / array
+ *
+ * @param  {object} o Object to get the keys of
+ * @return {array} Keys
+ */
+var _objectKeys = function ( o ) {
+	var out = [];
+
+	for ( var key in o ) {
+		if ( o.hasOwnProperty( key ) ) {
+			out.push( key );
+		}
+	}
+
+	return out;
+};
+
+/**
+ * Compare parameters for difference - diving into arrays and objects if
+ * needed, allowing the object reference to be different, but the contents to
+ * match.
+ *
+ * @param  {*} o1 Object to compare
+ * @param  {*} o2 Object to compare
+ * @return {boolean} `true` if matching, `false` otherwise
+ */
+var _deepCompare = function (o1, o2) {
+	if ( typeof o1 !== 'object' || typeof o2 !== 'object' ) {
+		return o1 === o2;
+	}
+
+	var o1Props = _objectKeys( o1 );
+	var o2Props = _objectKeys( o2 );
+
+	if (o1Props.length !== o2Props.length) {
+		return false;
+	}
+
+	for ( var i=0, ien=o1Props.length ; i<ien ; i++ ) {
+		var propName = o1Props[i];
+
+		if ( typeof o1[propName] === 'object' ) {
+			if ( ! _deepCompare( o1[propName], o2[propName] ) ) {
+				return false;
+			}
+		}
+		else if (o1[propName] !== o2[propName]) {
+			return false;
+		}
+	}
+
+	return true;
+};
+
 // Field class
 
 
@@ -184,7 +269,7 @@ Editor.Field = function ( opts, classes, host ) {
 					multiI18n.restore+
 				'</div>'+
 				'<div data-dte-e="msg-error" class="'+classes['msg-error']+'"></div>'+
-				'<div data-dte-e="msg-message" class="'+classes['msg-message']+'"></div>'+
+				'<div data-dte-e="msg-message" class="'+classes['msg-message']+'">'+opts.message+'</div>'+
 				'<div data-dte-e="msg-info" class="'+classes['msg-info']+'">'+opts.fieldInfo+'</div>'+
 			'</div>'+
 		'</div>');
@@ -212,7 +297,9 @@ Editor.Field = function ( opts, classes, host ) {
 
 	// On click - set a common value for the field
 	this.dom.multi.on( 'click', function () {
-		that.val('');
+		if ( that.s.opts.multiEditable && ! template.hasClass( classes.disabled ) ) {
+			that.val('');
+		}
 	} );
 
 	this.dom.multiReturn.on( 'click', function () {
@@ -265,7 +352,10 @@ Editor.Field.prototype = {
 	},
 
 	disable: function () {
+		this.dom.container.addClass( this.s.classes.disabled );
+
 		this._typeFn( 'disable' );
+
 		return this;
 	},
 
@@ -278,7 +368,10 @@ Editor.Field.prototype = {
 	},
 
 	enable: function () {
+		this.dom.container.removeClass( this.s.classes.disabled );
+
 		this._typeFn( 'enable' );
+
 		return this;
 	},
 
@@ -293,7 +386,13 @@ Editor.Field.prototype = {
 			this.dom.container.removeClass( classes.error );
 		}
 
+		this._typeFn( 'errorMessage', msg );
+
 		return this._msg( this.dom.fieldError, msg, fn );
+	},
+
+	fieldInfo: function ( msg ) {
+		return this._msg( this.dom.fieldInfo, msg );
 	},
 
 	isMultiValue: function () {
@@ -358,6 +457,10 @@ Editor.Field.prototype = {
 
 		label.html( str );
 		return this;
+	},
+
+	labelInfo: function ( msg ) {
+		return this._msg( this.dom.labelInfo, msg );
 	},
 
 	message: function ( msg, fn ) {
@@ -519,6 +622,10 @@ Editor.Field.prototype = {
 		return this;
 	},
 
+	multiEditable: function () {
+		return this.s.opts.multiEditable;
+	},
+
 	multiIds: function () {
 		return this.s.multiIds;
 	},
@@ -545,6 +652,10 @@ Editor.Field.prototype = {
 	},
 
 	_msg: function ( el, msg, fn ) {
+		if ( msg === undefined ) {
+			return el.html();
+		}
+
 		if ( typeof msg === 'function' ) {
 			var editor = this.s.host;
 			msg = msg( editor, new DataTable.Api( editor.s.table ) );
@@ -578,6 +689,8 @@ Editor.Field.prototype = {
 		var last;
 		var ids = this.s.multiIds;
 		var values = this.s.multiValues;
+		var isMultiValue = this.s.multiValue;
+		var isMultiEditable = this.s.opts.multiEditable;
 		var val;
 		var different = false;
 
@@ -594,8 +707,8 @@ Editor.Field.prototype = {
 			}
 		}
 
-		if ( different && this.s.multiValue ) {
-			// Different values
+		if ( (different && isMultiValue) || (!isMultiEditable && isMultiValue) ) {
+			// Different values or same values, but not multiple editable
 			this.dom.inputControl.css( { display: 'none' } );
 			this.dom.multi.css( { display: 'block' } );
 		}
@@ -604,16 +717,21 @@ Editor.Field.prototype = {
 			this.dom.inputControl.css( { display: 'block' } );
 			this.dom.multi.css( { display: 'none' } );
 
-			if ( this.s.multiValue ) {
+			if ( isMultiValue ) {
 				this.val( last );
 			}
 		}
 
 		this.dom.multiReturn.css( {
-			display: ids && ids.length > 1 && different && ! this.s.multiValue ?
+			display: ids && ids.length > 1 && different && ! isMultiValue ?
 				'block' :
 				'none'
 		} );
+
+		// Update information label
+		var i18n =  this.s.host.i18n.multi;
+		this.dom.multiInfo.html( isMultiEditable ? i18n.info : i18n.noMulti)
+		this.dom.multi.toggleClass( this.s.classes.multiNoEdit, ! isMultiEditable );
 
 		this.s.host._multiInfo();
 
@@ -732,7 +850,21 @@ Editor.Field.defaults = {
 	 *  @type string
 	 *  @default text
 	 */
-	"type": "text"
+	"type": "text",
+
+	/**
+	 * Information message for the field - expected to be dynamic
+	 *  @type string
+	 *  @default <i>Empty string</i>
+	 */
+	"message": "",
+
+	/**
+	 * Allow a field to be editable when multiple rows are selected
+	 *  @type boolean
+	 *  @default  true
+	 */
+	"multiEditable": true
 };
 
 
@@ -1017,7 +1149,7 @@ Editor.models.settings = {
 	"id": -1,
 
 	/**
-	 * Flag to indicate if the form is currently displayed (true) or not (false)
+	 * Flag to indicate if the form is currently displayed or not and what type of display
 	 *  @type string
 	 *  @default null
 	 */
@@ -1051,7 +1183,12 @@ Editor.models.settings = {
 	 *  @type string
 	 *  @default null
 	 */
-	"idSrc": null
+	"idSrc": null,
+
+	/**
+	 * Unique instance counter to be able to remove events
+	 */
+	"unique": 0
 };
 
 
@@ -1142,6 +1279,14 @@ Editor.models.formOptions = {
 	 * @type string
 	 */
 	onEsc: 'close',
+
+	/**
+	 * Action to take when a field error is detected in the returned JSON - can
+	 * be `focus` or `none`
+	 * 
+	 * @type string
+	 */
+	onFieldError: 'focus',
 
 	/**
 	 * Data to submit to the server when submitting a form. If an option is
@@ -1307,6 +1452,12 @@ Editor.display.lightbox = $.extend( true, {}, Editor.models.displayController, {
 			.animate( {
 				opacity: 1
 			} );
+
+		// Terrible Chrome workaround. Since m53 the footer would be incorrectly
+		// offset. This triggers a rerender. See thread 38145
+		setTimeout( function () {
+			$('div.DTE_Footer').css( 'text-indent', -1 );
+		}, 10 );
 
 		// Event handlers - assign on show (and unbind on hide) rather than init
 		// since we might need to refer to different editor instances - 12563
@@ -1641,8 +1792,7 @@ Editor.display.envelope = $.extend( true, {}, Editor.models.displayController, {
 	"_dom": {
 		"wrapper": $(
 			'<div class="DTED DTED_Envelope_Wrapper">'+
-				'<div class="DTED_Envelope_ShadowLeft"></div>'+
-				'<div class="DTED_Envelope_ShadowRight"></div>'+
+				'<div class="DTED_Envelope_Shadow"></div>'+
 				'<div class="DTED_Envelope_Container"></div>'+
 			'</div>'
 		)[0],
@@ -1752,7 +1902,10 @@ Editor.prototype.background = function ()
 {
 	var onBackground = this.s.editOpts.onBackground;
 
-	if ( onBackground === 'blur' ) {
+	if ( typeof onBackground === 'function' ) {
+		onBackground( this );
+	}
+	else if ( onBackground === 'blur' ) {
 		this.blur();
 	}
 	else if ( onBackground === 'close' ) {
@@ -1845,6 +1998,7 @@ Editor.prototype.bubble = function ( cells, fieldNames, show, opts )
 				'<div class="'+classes.liner+'">'+
 					'<div class="'+classes.table+'">'+
 						'<div class="'+classes.close+'" />'+
+						'<div class="DTE_Processing_Indicator"><span></div>'+
 					'</div>'+
 				'</div>'+
 				'<div class="'+classes.pointer+'" />'+
@@ -1928,6 +2082,7 @@ Editor.prototype.bubblePosition = function ()
 
 	$.each( nodes, function (i, node) {
 		var pos = $(node).offset();
+		node = $(node).get(0);
 
 		position.top += pos.top;
 		position.left += pos.left;
@@ -2038,7 +2193,7 @@ Editor.prototype.buttons = function ( buttons )
 				btn.label( that ) :
 				btn.label || ''
 			)
-			.attr( 'tabindex', 0 )
+			.attr( 'tabindex', btn.tabIndex !== undefined ? btn.tabIndex : 0 )
 			.on( 'keyup', function (e) {
 				if ( e.keyCode === 13 && btn.fn ) {
 					btn.fn.call( that );
@@ -2190,6 +2345,7 @@ Editor.prototype.create = function ( arg1, arg2, arg3, arg4 )
 
 	var argOpts = this._crudArgs( arg1, arg2, arg3, arg4 );
 
+	this.s.mode = 'main';
 	this.s.action = "create";
 	this.s.modifier = null;
 	this.dom.form.style.display = 'block';
@@ -2332,6 +2488,29 @@ Editor.prototype.dependent = function ( parent, url, opts ) {
 	} );
 
 	return this;
+};
+
+
+/**
+ * Destroy the Editor instance, cleaning up fields, display and event handlers
+ */
+Editor.prototype.destroy = function ()
+{
+	if ( this.s.displayed ) {
+		this.close();
+	}
+
+	this.clear();
+
+	var controller = this.s.displayController;
+	if ( controller.destroy ) {
+		controller.destroy( this );
+	}
+
+	$(document).off( '.dte'+this.s.unique );
+
+	this.dom = null
+	this.s = null;
 };
 
 
@@ -2599,6 +2778,23 @@ Editor.prototype.fields = function ()
 	} );
 };
 
+/**
+ * Get data object for a file from a table and id
+ *
+ * @param  {string} name Table name
+ * @param  {string|number} id Primary key identifier
+ * @return {object} Table information
+ */
+Editor.prototype.file = _api_file
+
+/**
+ * Get data objects for available files
+ *
+ * @param  {string} [name] Table name
+ * @return {object} Table array
+ */
+Editor.prototype.files = _api_files;
+
 
 /**
  * Get the value of a field
@@ -2742,6 +2938,7 @@ Editor.prototype.inline = function ( cell, fieldName, opts )
 	var node, field;
 	var countOuter=0, countInner;
 	var closed=false;
+	var classes = this.classes.inline;
 
 	// Read the individual cell information from the editFields object
 	$.each( editFields, function ( i, editField ) {
@@ -2797,17 +2994,21 @@ Editor.prototype.inline = function ( cell, fieldName, opts )
 	var children = node.contents().detach();
 
 	node.append( $(
-		'<div class="DTE DTE_Inline">'+
-			'<div class="DTE_Inline_Field"/>'+
-			'<div class="DTE_Inline_Buttons"/>'+
+		'<div class="'+classes.wrapper+'">'+
+			'<div class="'+classes.liner+'">'+
+				'<div class="DTE_Processing_Indicator"><span/></div>'+
+			'</div>'+
+			'<div class="'+classes.buttons+'"/>'+
 		'</div>'
 	) );
 
-	node.find('div.DTE_Inline_Field').append( field.node() );
+	node.find('div.'+classes.liner.replace(/ /g, '.'))
+		.append( field.node() )
+		.append( this.dom.formError );
 
 	if ( opts.buttons ) {
 		// Use prepend for the CSS, so we can float the buttons right
-		node.find('div.DTE_Inline_Buttons').append( this.dom.buttons );
+		node.find('div.'+classes.buttons.replace(/ /g, '.')).append( this.dom.buttons );
 	}
 
 	this._closeReg( function ( submitComplete ) {
@@ -3533,11 +3734,11 @@ Editor.prototype.title = function ( title )
  */
 Editor.prototype.val = function ( field, value )
 {
-	if ( value === undefined ) {
-		return this.get( field ); // field can be undefined to get all
+	if ( value !== undefined || $.isPlainObject( field ) ) {
+		return this.set( field, value );
 	}
 
-	return this.set( field, value );
+	return this.get( field ); // field can be undefined to get all
 };
 
 
@@ -3642,24 +3843,8 @@ apiRegister( 'cells().edit()', function ( opts ) {
 	return this;
 } );
 
-apiRegister( 'file()', function ( name, id ) {
-	return Editor.files[ name ][ id ];
-} );
-
-apiRegister( 'files()', function ( name, value ) {
-	if ( ! name ) {
-		return Editor.files;
-	}
-
-	if ( ! value ) {
-		return Editor.files[ name ];
-	}
-
-	// The setter option of this method is not publicly documented
-	Editor.files[ name ] = value;
-
-	return this;
-} );
+apiRegister( 'file()', _api_file );
+apiRegister( 'files()', _api_files );
 
 // Global listener for file information updates via DataTables' Ajax JSON
 $(document).on( 'xhr.dt', function (e, ctx, json) {
@@ -3854,6 +4039,7 @@ Editor.upload = function ( editor, conf, files, progressCallback, completeCallba
 			},
 			success: function ( json ) {
 				editor.off( 'preSubmit.DTE_Upload' );
+				editor._event( 'uploadXhrSuccess', [ conf.name, json ] );
 
 				if ( json.fieldErrors && json.fieldErrors.length ) {
 					var errors = json.fieldErrors;
@@ -3870,8 +4056,9 @@ Editor.upload = function ( editor, conf, files, progressCallback, completeCallba
 				}
 				else {
 					if ( json.files ) {
-						$.each( json.files, function ( name, value ) {
-							Editor.files[ name ] = value;
+						// Loop over the tables that are defined
+						$.each( json.files, function ( table, files ) {
+							$.extend( Editor.files[ table ], files );
 						} );
 					}
 
@@ -3890,7 +4077,8 @@ Editor.upload = function ( editor, conf, files, progressCallback, completeCallba
 					}
 				}
 			},
-			error: function () {
+			error: function ( xhr ) {
+				editor._event( 'uploadXhrError', [ conf.name, xhr ] );
 				editor.error( conf.name, generalError );
 			}
 		} ) );
@@ -3919,10 +4107,16 @@ Editor.prototype._constructor = function ( init )
 			Editor.dataSources.dataTable :
 			Editor.dataSources.html,
 		formOptions: init.formOptions,
-		legacyAjax:  init.legacyAjax
+		legacyAjax:  init.legacyAjax,
+		template:    init.template ?
+			$(init.template).detach() :
+			null
 	} );
 	this.classes = $.extend( true, {}, Editor.classes );
 	this.i18n = init.i18n;
+
+	// Increment the unique counter for the next instance
+	Editor.models.settings.unique++;
 
 	var that = this;
 	var classes = this.classes;
@@ -3930,7 +4124,7 @@ Editor.prototype._constructor = function ( init )
 	this.dom = {
 		"wrapper": $(
 			'<div class="'+classes.wrapper+'">'+
-				'<div data-dte-e="processing" class="'+classes.processing.indicator+'"></div>'+
+				'<div data-dte-e="processing" class="'+classes.processing.indicator+'"><span/></div>'+
 				'<div data-dte-e="body" class="'+classes.body.wrapper+'">'+
 					'<div data-dte-e="body_content" class="'+classes.body.content+'"/>'+
 				'</div>'+
@@ -3993,14 +4187,14 @@ Editor.prototype._constructor = function ( init )
 	}
 
 	$(document)
-		.on( 'init.dt.dte', function (e, settings, json) {
+		.on( 'init.dt.dte'+this.s.unique, function (e, settings, json) {
 			// Attempt to attach to a DataTable automatically when the table is
 			// initialised
 			if ( that.s.table && settings.nTable === $(that.s.table).get(0) ) {
 				settings._editor = that;
 			}
 		} )
-		.on( 'xhr.dt', function (e, settings, json) {
+		.on( 'xhr.dt.dte'+this.s.unique, function (e, settings, json) {
 			// Automatically update fields which have a field name defined in
 			// the returned json - saves an `initComplete` for the user
 			if ( json && that.s.table && settings.nTable === $(that.s.table).get(0) ) {
@@ -4054,17 +4248,29 @@ Editor.prototype._actionClass = function ()
  */
 Editor.prototype._ajax = function ( data, success, error )
 {
+	var thrown;
 	var opts = {
 		type:     'POST',
 		dataType: 'json',
 		data:     null,
-		error:    error,
-		success:  function ( json, status, xhr ) {
-			if ( xhr.status === 204 ) {
-				json = {};
+		error:    [ function ( xhr, text, err ) {
+			thrown = err;
+		} ],
+		complete: [ function ( xhr, text ) {
+			// Use `complete` rather than `success` so that all status codes are
+			// caught and can return valid JSON (useful when working with REST
+			// services).
+			var json = xhr.status === 204 ?
+				{} :
+				xhr.responseJSON;
+
+			if ( $.isPlainObject( json ) ) {
+				success( json );
 			}
-			success( json );
-		}
+			else {
+				error( xhr, text, thrown );
+			}
+		} ]
 	};
 	var a;
 	var action = this.s.action;
@@ -4122,8 +4328,22 @@ Editor.prototype._ajax = function ( data, success, error )
 		}
 	}
 	else {
-		// As an object, we extend the defaults
-		opts = $.extend( {}, opts, ajaxSrc || {} );
+		// As an object, we extend the Editor defaults - with the exception of
+		// the error and success functions which get added in so the user can
+		// specify their own in addition to ours
+		var optsCopy = $.extend( {}, ajaxSrc || {} );
+
+		if ( optsCopy.success ) {
+			opts.success.push( optsCopy.success );
+			delete optsCopy.success;
+		}
+
+		if ( optsCopy.error ) {
+			opts.error.push( optsCopy.error );
+			delete optsCopy.error;
+		}
+
+		opts = $.extend( {}, opts, optsCopy );
 	}
 
 	// URL macros
@@ -4199,15 +4419,19 @@ Editor.prototype._assembleMain = function ()
 Editor.prototype._blur = function ()
 {
 	var opts = this.s.editOpts;
+	var onBlur = opts.onBlur;
 
 	if ( this._event( 'preBlur' ) === false ) {
 		return;
 	}
 
-	if ( opts.onBlur === 'submit' ) {
+	if ( typeof onBlur === 'function' ) {
+		onBlur( this );
+	}
+	else if ( onBlur === 'submit' ) {
 		this.submit();
 	}
-	else if ( opts.onBlur === 'close' ) {
+	else if ( onBlur === 'close' ) {
 		this._close();
 	}
 };
@@ -4221,6 +4445,11 @@ Editor.prototype._blur = function ()
  */
 Editor.prototype._clearDynamicInfo = function ()
 {
+	// Can be triggered due to a destroy if the editor is open
+	if ( ! this.s ) {
+		return;
+	}
+
 	var errorClass = this.classes.field.error;
 	var fields = this.s.fields;
 
@@ -4375,6 +4604,8 @@ Editor.prototype._displayReorder = function ( includeFields )
 	var formContent = $(this.dom.formContent);
 	var fields = this.s.fields;
 	var order = this.s.order;
+	var template = this.s.template;
+	var mode = this.s.mode || 'main';
 
 	if ( includeFields ) {
 		this.s.includeFields = includeFields;
@@ -4392,9 +4623,20 @@ Editor.prototype._displayReorder = function ( includeFields )
 			fieldOrName;
 
 		if ( $.inArray( name, includeFields ) !== -1 ) {
-			formContent.append( fields[ name ].node() );
+			if ( template && mode === 'main' ) {
+				template.find('editor-field[name="'+name+'"]').after(
+					fields[ name ].node()
+				);
+			}
+			else {
+				formContent.append( fields[ name ].node() );
+			}
 		}
 	} );
+
+	if ( template && mode === 'main' ) {
+		template.appendTo( formContent );
+	}
 
 	this._event( 'displayOrder', [
 		this.s.displayed,
@@ -4424,6 +4666,7 @@ Editor.prototype._edit = function ( items, editFields, type )
 	this.s.modifier = items;
 	this.s.action = "edit";
 	this.dom.form.style.display = 'block';
+	this.s.mode = type;
 
 	this._actionClass();
 
@@ -4459,8 +4702,10 @@ Editor.prototype._edit = function ( items, editFields, type )
 	// Remove the fields that are not required from the display
 	var currOrder = this.order().slice();
 
-	for ( var i=currOrder.length ; i >= 0 ; i-- ) {
-		if ( $.inArray( currOrder[i], usedFields ) === -1 ) {
+	for ( var i=currOrder.length-1 ; i >= 0 ; i-- ) {
+		// Use `toString()` to convert numbers to strings, since usedFields
+		// contains strings (object property names)
+		if ( $.inArray( currOrder[i].toString(), usedFields ) === -1 ) {
 			currOrder.splice( i, 1 );
 		}
 	}
@@ -4543,6 +4788,26 @@ Editor.prototype._eventName = function ( input )
 	}
 
 	return names.join( ' ' );
+};
+
+
+/**
+ * Find a field from a DOM node. All children are searched.
+ *
+ * @param  {node} node DOM node to search for
+ * @return {Field}     Field instance
+ */
+Editor.prototype._fieldFromNode = function ( node )
+{
+	var foundField = null;
+
+	$.each( this.s.fields, function ( name, field ) {
+		if ( $( field.node() ).find( node ).length ) {
+			foundField = field;
+		}
+	} );
+
+	return foundField;
 };
 
 
@@ -4660,32 +4925,36 @@ Editor.prototype._formOptions = function ( opts )
 
 	$(document).on( 'keydown'+namespace, function ( e ) {
 		var el = $(document.activeElement);
-		var name = el.length ? el[0].nodeName.toLowerCase() : null;
-		var type = $(el).attr('type');
-		var returnFriendlyNode = name === 'input';
 
-		if ( that.s.displayed && opts.onReturn === 'submit' && e.keyCode === 13 && returnFriendlyNode ) { // return
-			e.preventDefault();
-			that.submit();
+		if ( e.keyCode === 13 && that.s.displayed ) { // return
+			var field = that._fieldFromNode( el );
+
+			// Allow the field plug-in to say if we can submit or not
+			if ( typeof field.canReturnSubmit === 'function' && field.canReturnSubmit( el ) ) {
+				if ( opts.onReturn === 'submit' ) {
+					e.preventDefault();
+					that.submit();
+				}
+				else if ( typeof opts.onReturn === 'function' ) {
+					e.preventDefault();
+					opts.onReturn( that );
+				}
+			}
 		}
 		else if ( e.keyCode === 27 ) { // esc
 			e.preventDefault();
 
-			switch( opts.onEsc ) {
-				case 'blur':
-					that.blur();
-					break;
-
-				case 'close':
-					that.close();
-					break;
-
-				case 'submit':
-					that.submit();
-					break;
-
-				default: // 'none' - no action
-					break;
+			if ( typeof opts.onEsc === 'function' ) {
+				opts.onEsc( that );
+			}
+			else if ( opts.onEsc === 'blur' ) {
+				that.blur();
+			}
+			else if ( opts.onEsc === 'close' ) {
+				that.close();
+			}
+			else if ( opts.onEsc === 'submit' ) {
+				that.submit();
 			}
 		}
 		else if ( el.parents('.DTE_Form_Buttons').length ) {
@@ -4751,7 +5020,7 @@ Editor.prototype._legacyAjax = function ( direction, action, data )
 			// 1.4 libraries retuned data in the `row` property
 			data.data = [ data.row ];
 		}
-		else {
+		else if ( ! data.data ) {
 			// 1.4- allowed data not to be returned - 1.5 requires it
 			data.data = [];
 		}
@@ -4842,6 +5111,7 @@ Editor.prototype._multiInfo = function ()
 	var fields = this.s.fields;
 	var include = this.s.includeFields;
 	var show = true;
+	var state;
 
 	if ( ! include ) {
 		return;
@@ -4849,14 +5119,22 @@ Editor.prototype._multiInfo = function ()
 
 	for ( var i=0, ien=include.length ; i<ien ; i++ ) {
 		var field = fields[ include[i] ];
+		var multiEditable = field.multiEditable();
 
-		if ( field.isMultiValue() && show ) {
-			fields[ include[i] ].multiInfoShown( show );
+		if ( field.isMultiValue() && multiEditable && show ) {
+			// Multi-row editable. Only show first message
+			state = true;
 			show = false;
 		}
-		else {
-			fields[ include[i] ].multiInfoShown( false );
+		else if ( field.isMultiValue() && ! multiEditable ) {
+			// Not multi-row editable. Always show message
+			state = true;
 		}
+		else {
+			state = false;
+		}
+
+		fields[ include[i] ].multiInfoShown( state );
 	}
 };
 
@@ -4945,20 +5223,9 @@ Editor.prototype._preopen = function ( type )
  */
 Editor.prototype._processing = function ( processing )
 {
-	var wrapper = $(this.dom.wrapper);
-	var procStyle = this.dom.processing.style;
 	var procClass = this.classes.processing.active;
 
-	if ( processing ) {
-		procStyle.display = 'block';
-		wrapper.addClass( procClass );
-		$('div.DTE').addClass( procClass );
-	}
-	else {
-		procStyle.display = 'none';
-		wrapper.removeClass( procClass );
-		$('div.DTE').removeClass( procClass );
-	}
+	$('div.DTE').toggleClass( procClass, processing );
 
 	this.s.processing = processing;
 
@@ -5035,7 +5302,7 @@ Editor.prototype._submit = function ( successCallback, errorCallback, formatdata
 
 					// Build a changed object for if that is the selected data
 					// type
-					if ( action === 'edit' && value !== editData[ name ][ idSrc ] ) {
+					if ( action === 'edit' && (!editData[ name ] || ! _deepCompare( value, editData[ name ][ idSrc ]) ) ) {
 						builder( changedRowData, value );
 						changed = true;
 
@@ -5068,6 +5335,9 @@ Editor.prototype._submit = function ( successCallback, errorCallback, formatdata
 
 			if ( opts.onComplete === 'close' && (hide === undefined || hide) ) {
 				this._close( false );
+			}
+			else if ( typeof opts.onComplete === 'function' ) {
+				opts.onComplete( this );
 			}
 
 			if ( successCallback ) {
@@ -5102,110 +5372,190 @@ Editor.prototype._submit = function ( successCallback, errorCallback, formatdata
 	}
 
 	// Submit to the server (or whatever method is defined in the settings)
-	this._ajax(
+	var submitWire = this.s.ajax || this.s.ajaxUrl ?
+		this._ajax :
+		this._submitTable;
+
+	submitWire.call(
+		this,
 		submitParams,
 		function (json) {
-			var setData;
-			that._legacyAjax( 'receive', action, json );
-			that._event( 'postSubmit', [json, submitParams, action] );
-
-			if ( !json.error ) {
-				json.error = "";
-			}
-			if ( !json.fieldErrors ) {
-				json.fieldErrors = [];
-			}
-
-			if ( json.error || json.fieldErrors.length ) {
-				// Global form error
-				that.error( json.error );
-
-				// Field specific errors
-				$.each( json.fieldErrors, function (i, err) {
-					var field = fields[ err.name ];
-
-					field.error( err.status || "Error" );
-
-					if ( i === 0 ) {
-						// Scroll the display to the first error and focus
-						$(that.dom.bodyContent, that.s.wrapper).animate( {
-							"scrollTop": $(field.node()).position().top
-						}, 500 );
-
-						field.focus();
-					}
-				} );
-
-				if ( errorCallback ) {
-					errorCallback.call( that, json );
-				}
-			}
-			else {
-				// Create a data store that the data source can use, which is
-				// unique to this action
-				var store = {};
-				that._dataSource( 'prep', action, modifier, submitParamsLocal, json.data, store );
-
-				if ( action === "create"  || action === "edit" ) {
-					for ( i=0 ; i<json.data.length ; i++ ) {
-						setData = json.data[ i ];
-						that._event( 'setData', [json, setData, action] );
-
-						if ( action === "create" ) {
-							// New row was created to add it to the DT
-							that._event( 'preCreate', [json, setData] );
-							that._dataSource( 'create', fields, setData, store );
-							that._event( ['create', 'postCreate'], [json, setData] );
-						}
-						else if ( action === "edit" ) {
-							// Row was updated, so tell the DT
-							that._event( 'preEdit', [json, setData] );
-							that._dataSource( 'edit', modifier, fields, setData, store );
-							that._event( ['edit', 'postEdit'], [json, setData] );
-						}
-					}
-				}
-				else if ( action === "remove" ) {
-					// Remove the rows given and then redraw the table
-					that._event( 'preRemove', [json] );
-					that._dataSource( 'remove', modifier, fields, store );
-					that._event( ['remove', 'postRemove'], [json] );
-				}
-
-				that._dataSource( 'commit', action, modifier, json.data, store );
-
-				// Submission complete
-				if ( editCount === that.s.editCount ) {
-					that.s.action = null;
-
-					if ( opts.onComplete === 'close' && (hide === undefined || hide) ) {
-						that._close( true );
-					}
-				}
-
-				// All done - fire off the callbacks and events
-				if ( successCallback ) {
-					successCallback.call( that, json );
-				}
-				that._event( 'submitSuccess', [json, setData] );
-			}
-
-			that._processing( false );
-			that._event( 'submitComplete', [json, setData] );
+			that._submitSuccess(
+				json, submitParams, submitParamsLocal, action,
+				editCount, hide, successCallback, errorCallback
+			);
 		},
 		function (xhr, err, thrown) {
-			that._event( 'postSubmit', [xhr, err, thrown, submitParams] );
-
-			that.error( that.i18n.error.system );
-			that._processing( false );
-
-			if ( errorCallback ) {
-				errorCallback.call( that, xhr, err, thrown );
-			}
-
-			that._event( ['submitError', 'submitComplete'], [xhr, err, thrown, submitParams] );
+			that._submitError( xhr, err, thrown, errorCallback, submitParams );
 		}
-	); // /ajax submit
+	);
+};
+
+
+/**
+ * Save submitted data without an Ajax request. This will write to a local
+ * table only - not saving it permanently, but rather using the DataTable itself
+ * as a data store.
+ *
+ * @param  {object} data Data to submit
+ * @param  {function} success Success callback
+ * @param  {function} error Error callback
+ * @private
+ */
+Editor.prototype._submitTable = function ( data, success, error )
+{
+	var that = this;
+	var action = data.action;
+	var out = { data: [] };
+	var idSet = DataTable.ext.oApi._fnSetObjectDataFn( this.s.idSrc );
+
+	// Nothing required for remove - create and edit get a copy of the data
+	if ( action !== 'remove' ) {
+		$.each( data.data, function ( key, val ) {
+			// Get the original row's data, so we can modify it with new values.
+			// This allows Editor to not need to submit all fields
+			var rowData = that._dataSource( 'fields', '#'+key )[ key ].data;
+			var toSave = $.extend( true, {}, rowData, val );
+
+			// Create a new id for `create` and use the existing one for edit
+			idSet( toSave, action === 'create' ?
+				+new Date() +''+ key :
+				key
+			);
+
+			out.data.push( toSave );
+		} );
+	}
+
+	success( out );
+};
+
+
+/**
+ * Submit success callback function
+ * @private
+ */
+Editor.prototype._submitSuccess = function ( json, submitParams, submitParamsLocal, action, editCount, hide, successCallback, errorCallback )
+{
+	var that = this;
+	var setData;
+	var fields = this.s.fields;
+	var opts = this.s.editOpts;
+	var modifier = this.s.modifier;
+
+	this._legacyAjax( 'receive', action, json );
+	this._event( 'postSubmit', [json, submitParams, action] );
+
+	if ( !json.error ) {
+		json.error = "";
+	}
+	if ( !json.fieldErrors ) {
+		json.fieldErrors = [];
+	}
+
+	if ( json.error || json.fieldErrors.length ) {
+		// Global form error
+		this.error( json.error );
+
+		// Field specific errors
+		$.each( json.fieldErrors, function (i, err) {
+			var field = fields[ err.name ];
+
+			field.error( err.status || "Error" );
+
+			if ( i === 0 ) {
+				if ( opts.onFieldError === 'focus' ) {
+					// Scroll the display to the first error and focus
+					$(that.dom.bodyContent, that.s.wrapper).animate( {
+						"scrollTop": $(field.node()).position().top
+					}, 500 );
+
+					field.focus();
+				}
+				else if ( typeof opts.onFieldError === 'function' ) {
+					opts.onFieldError( that, err );
+				}
+			}
+		} );
+
+		if ( errorCallback ) {
+			errorCallback.call( that, json );
+		}
+	}
+	else {
+		// Create a data store that the data source can use, which is
+		// unique to this action
+		var store = {};
+		this._dataSource( 'prep', action, modifier, submitParamsLocal, json, store );
+
+		if ( action === "create"  || action === "edit" ) {
+			for ( var i=0 ; i<json.data.length ; i++ ) {
+				setData = json.data[ i ];
+				this._event( 'setData', [json, setData, action] ); // legacy
+
+				if ( action === "create" ) {
+					// New row was created to add it to the DT
+					this._event( 'preCreate', [json, setData] );
+					this._dataSource( 'create', fields, setData, store );
+					this._event( ['create', 'postCreate'], [json, setData] );
+				}
+				else if ( action === "edit" ) {
+					// Row was updated, so tell the DT
+					this._event( 'preEdit', [json, setData] );
+					this._dataSource( 'edit', modifier, fields, setData, store );
+					this._event( ['edit', 'postEdit'], [json, setData] );
+				}
+			}
+		}
+		else if ( action === "remove" ) {
+			// Remove the rows given and then redraw the table
+			this._event( 'preRemove', [json] );
+			this._dataSource( 'remove', modifier, fields, store );
+			this._event( ['remove', 'postRemove'], [json] );
+		}
+
+		this._dataSource( 'commit', action, modifier, json.data, store );
+
+		// Submission complete
+		if ( editCount === this.s.editCount ) {
+			this.s.action = null;
+
+			if ( opts.onComplete === 'close' && (hide === undefined || hide) ) {
+				this._close( true );
+			}
+			else if ( typeof opts.onComplete === 'function' ) {
+				opts.onComplete( this );
+			}
+		}
+
+		// All done - fire off the callbacks and events
+		if ( successCallback ) {
+			successCallback.call( that, json );
+		}
+		this._event( 'submitSuccess', [json, setData] );
+	}
+
+	this._processing( false );
+	this._event( 'submitComplete', [json, setData] );
+};
+
+
+/**
+ * Submit error callback function
+ * @private
+ */
+Editor.prototype._submitError = function ( xhr, err, thrown, errorCallback, submitParams )
+{
+	this._event( 'postSubmit', [xhr, err, thrown, submitParams] );
+
+	this.error( this.i18n.error.system );
+	this._processing( false );
+
+	if ( errorCallback ) {
+		errorCallback.call( this, xhr, err, thrown );
+	}
+
+	this._event( ['submitError', 'submitComplete'], [xhr, err, thrown, submitParams] );
 };
 
 
@@ -5732,23 +6082,29 @@ Editor.defaults = {
 		 * Strings used for multi-value editing
 		 *  @namespace
 		 */
-		"multi": {
+		multi: {
 			/**
 			 * Shown in place of the field value when a field has multiple values
 			 */
-			"title": "Multiple values",
+			title: "Multiple values",
 
 			/**
 			 * Shown below the multi title text, although only the first
 			 * instance of this text is shown in the form to reduce redundancy
 			 */
-			"info": "The selected items contain different values for this input. To edit and set all items for this input to the same value, click or tap here, otherwise they will retain their individual values.",
+			info: "The selected items contain different values for this input. To edit and set all items for this input to the same value, click or tap here, otherwise they will retain their individual values.",
 
 			/**
 			 * Shown below the field input when group editing a value to allow
 			 * the user to return to the original multiple values
 			 */
-			"restore": "Undo changes"
+			restore: "Undo changes",
+
+
+			/**
+			 * Disabled for multi-row editing
+			 */
+			noMulti: "This input can be edited individually, but not part of a group."
 		},
 
 		"datetime": {
@@ -5868,12 +6224,13 @@ var __dtCellSelector = function ( out, dt, identifier, allFields, idFn, forceFie
 		var data = row.data();
 		var idSrc = idFn( data );
 		var fields = forceFields || __dtFieldsFromIdx( dt, allFields, idx.column );
+		var isNode = (typeof identifier === 'object' && identifier.nodeName) || identifier instanceof $;
 
 		// Use the row selector to get the row information
 		__dtRowSelector(out, dt, idx.row, allFields, idFn);
 
-		out[ idSrc ].attach = typeof identifier === 'object' && identifier.nodeName ?
-			[ identifier ] :
+		out[ idSrc ].attach = isNode ?
+			[ $(identifier).get(0) ] :
 			[ cell.node() ];
 		out[ idSrc ].displayFields = fields; // all fields are edited, but only
 		                                     // these are actually displayed
@@ -5912,6 +6269,12 @@ var __dtFieldsFromIdx = function ( dt, fields, idx )
 	return resolvedFields;
 };
 
+var __dtjqId = function ( id ) {
+	return typeof id === 'string' ?
+		'#'+id.replace( /(:|\.|\[|\]|,)/g, '\\$1' ) :
+		'#'+id;
+};
+
 
 
 __dataSources.dataTable = {
@@ -5922,16 +6285,6 @@ __dataSources.dataTable = {
 		var out = {};
 		var forceFields;
 		var responsiveNode;
-
-		// Responsive field - this isn't really needed as of DT 1.10.11. To be
-		// removed in Editor 1.6
-		if ( identifier.nodeName && $(identifier).hasClass( 'dtr-data' ) ) {
-			responsiveNode = identifier;
-
-			// Overwrite the selector so that DataTables will select based on
-			// the cell that Responsive is showing data for
-			identifier = dt.responsive.index( $(identifier).closest('li') );
-		}
 
 		if ( fieldNames ) {
 			if ( ! $.isArray( fieldNames ) ) {
@@ -5946,14 +6299,6 @@ __dataSources.dataTable = {
 		}
 
 		__dtCellSelector( out, dt, identifier, fields, idFn, forceFields );
-
-		// If Responsive, we want it to attach the editor to the element that
-		// was clicked on
-		if ( responsiveNode ) {
-			$.each( out, function ( i, val ) {
-				val.attach = [ responsiveNode ];
-			} );
-		}
 
 		return out;
 	},
@@ -6011,7 +6356,7 @@ __dataSources.dataTable = {
 			var row;
 
 			// Find the row to edit - attempt to do an id look up first for speed
-			row = dt.row( '#'+rowId );
+			row = dt.row( __dtjqId(rowId) );
 
 			// If not found, then we need to do it the slow way
 			if ( ! row.any() ) {
@@ -6037,23 +6382,50 @@ __dataSources.dataTable = {
 		}
 	},
 
-	remove: function ( identifier, fields ) {
+	remove: function ( identifier, fields, store ) {
 		// No confirmation from the server 
 		var dt = __dtApi( this.s.table );
+		var cancelled = store.cancelled;
 
 		if ( ! __dtIsSsp( dt, this ) ) {
-			dt.rows( identifier ).remove();
+			if ( cancelled.length === 0 ) {
+				// No rows were cancelled on the server-side, remove them all
+				dt.rows( identifier ).remove();
+			}
+			else {
+				// One or more rows were cancelled, so we need to identify them
+				// and not remove those rows
+				var idFn = DataTable.ext.oApi._fnGetObjectDataFn( this.s.idSrc );
+				var indexes = [];
+
+				dt.rows( identifier ).every( function () {
+					var id = idFn( this.data() );
+
+					if ( $.inArray( id, cancelled ) === -1 ) {
+						// Don't use `remove` here - it messes up the indexes
+						indexes.push( this.index() );
+					}
+				} );
+
+				dt.rows( indexes ).remove();
+			}
 		}
 	},
 
-	prep: function ( action, identifier, submit, data, store ) {
+	prep: function ( action, identifier, submit, json, store ) {
 		// On edit we store the ids of the rows that are being edited
 		if ( action === 'edit' ) {
+			var cancelled = json.cancelled || [];
+
 			store.rowIds = $.map( submit.data, function ( val, key ) {
-				if ( ! $.isEmptyObject( submit.data[ key ] ) ) {
-					return key;
-				}
+				return ! $.isEmptyObject( submit.data[ key ] ) && // was submitted
+					$.inArray( key, cancelled ) === -1 ? // was not cancelled on the server-side
+						key :
+						undefined;
 			} );
+		}
+		else if ( action === 'remove' ) {
+			store.cancelled = json.cancelled || [];
 		}
 	},
 
@@ -6071,7 +6443,7 @@ __dataSources.dataTable = {
 
 			for ( var i=0, ien=ids.length ; i<ien ; i++ ) {
 				// Find the row to edit - attempt to do an id look up first for speed
-				row = dt.row( '#'+ids[i] );
+				row = dt.row( __dtjqId(ids[i]) );
 
 				// If not found, then we need to do it the slow way
 				if ( ! row.any() ) {
@@ -6099,13 +6471,26 @@ __dataSources.dataTable = {
  * HTML editor interface
  */
 
+function __html_get( identifier, dataSrc ) {
+	var el = __html_el( identifier, dataSrc );
+
+	return el.filter('[data-editor-value]').length ?
+		el.attr( 'data-editor-value' ) :
+		el.html();
+}
+
 function __html_set( identifier, fields, data ) {
 	$.each( fields, function ( name, field ) {
 		var val = field.valFromData( data );
 
 		if ( val !== undefined ) {
-			__html_el( identifier, field.dataSrc() )
-				.each( function () {
+			var el = __html_el( identifier, field.dataSrc() );
+
+			if ( el.filter('[data-editor-value]').length ) {
+				el.attr( 'data-editor-value', val );
+			}
+			else {
+				el.each( function () {
 					// This is very frustrating, but in IE if you just write directly
 					// to innerHTML, and elements that are overwritten are GC'ed,
 					// even if there is a reference to them elsewhere
@@ -6114,6 +6499,7 @@ function __html_set( identifier, fields, data ) {
 					}
 				} )
 				.html( val );
+			}
 		}
 	} );
 }
@@ -6148,13 +6534,18 @@ __dataSources.html = {
 	},
 
 	individual: function ( identifier, fieldNames ) {
+		var attachEl;
+
 		// Auto detection of the field name and id
 		if ( identifier instanceof $ || identifier.nodeName ) {
+			attachEl = identifier;
+
 			if ( ! fieldNames ) {
 				fieldNames = [ $( identifier ).attr('data-editor-field') ];
 			}
 
-			identifier = $( identifier ).parents('[data-editor-id]').data('editor-id');
+			var back = $.fn.addBack ? 'addBack' : 'andSelf';
+			identifier = $( identifier ).parents('[data-editor-id]')[ back ]().data('editor-id');
 		}
 
 		// no id given and none found
@@ -6181,7 +6572,9 @@ __dataSources.html = {
 
 		$.each( out, function ( id, set ) {
 			set.type = 'cell';
-			set.attach = __html_els( identifier, fieldNames ).toArray();
+			set.attach = attachEl ?
+				$(attachEl) :
+				__html_els( identifier, fieldNames ).toArray();
 			set.fields = fields;
 			set.displayFields = forceFields;
 		} );
@@ -6201,7 +6594,7 @@ __dataSources.html = {
 		}
 
 		$.each( fields, function ( name, field ) {
-			var val = __html_el( identifier, field.dataSrc() ).html();
+			var val = __html_get( identifier, field.dataSrc() );
 
 			// If no HTML element is present, jQuery returns null. We want undefined
 			field.valToData( data, val === null ? undefined : val );
@@ -6278,7 +6671,7 @@ Editor.classes = {
 		/**
 		 * Added to the base element ("wrapper") when the form is "processing"
 		 */
-		"active": "DTE_Processing"
+		"active": "processing"
 	},
 
 	/**
@@ -6445,7 +6838,17 @@ Editor.classes = {
 		/**
 		 * Multi-value information display
 		 */
-		"multiRestore":  "multi-restore"
+		"multiRestore":  "multi-restore",
+
+		/**
+		 * Multi-value not editable (field.multiEditable)
+		 */
+		"multiNoEdit": "multi-noEdit",
+
+		/**
+		 * Field is disabled
+		 */
+		"disabled": "disabled"
 	},
 
 	/**
@@ -6468,6 +6871,18 @@ Editor.classes = {
 		 * Editor is in 'remove' state
 		 */
 		"remove": "DTE_Action_Remove"
+	},
+
+	/**
+	 * Inline editing classes - these are used to display the inline editor
+	 *  @namespace
+	 */
+	"inline": {
+		"wrapper": "DTE DTE_Inline",
+
+		"liner": "DTE_Inline_Field",
+
+		"buttons": "DTE_Inline_Buttons"
 	},
 
 	/**
@@ -6494,7 +6909,7 @@ Editor.classes = {
 		/**
 		 * Close button
 		 */
-		"close": "DTE_Bubble_Close",
+		"close": "icon close",
 
 		/**
 		 * Pointer shown which node is being edited
@@ -6509,14 +6924,15 @@ Editor.classes = {
 };
 
 
-
 /*
- * Add helpful TableTool buttons to make life easier
+ * Add helpful buttons to make life easier
  *
  * Note that the values that require a string to make any sense (the button text
  * for example) are set by Editor when Editor is initialised through the i18n
  * options.
  */
+(function () {
+
 if ( DataTable.TableTools ) {
 	var ttButtons = DataTable.TableTools.BUTTONS;
 	var ttButtonBase = {
@@ -6622,8 +7038,10 @@ if ( DataTable.TableTools ) {
 	} );
 }
 
+var _buttons = DataTable.ext.buttons;
 
-$.extend( DataTable.ext.buttons, {
+
+$.extend( _buttons, {
 	create: {
 		text: function ( dt, node, config ) {
 			return dt.i18n( 'buttons.create', config.editor.i18n.create.button );
@@ -6729,6 +7147,16 @@ $.extend( DataTable.ext.buttons, {
 	}
 } );
 
+// Reuse the standard edit and remove buttons for their singular equivalent,
+// but set it to extend the single selected button only
+_buttons.editSingle = $.extend( {}, _buttons.edit );
+_buttons.editSingle.extend = 'selectedSingle';
+
+_buttons.removeSingle = $.extend( {}, _buttons.remove );
+_buttons.removeSingle.extend = 'selectedSingle';
+
+}());
+
 /**
  * Field types array - this can be used to add field types or modify the pre-
  * defined options. See the online Editor documentation for information about
@@ -6817,6 +7245,7 @@ Editor.DateTime = function ( input, opts ) {
 				timeBlock( 'seconds' )+
 				timeBlock( 'ampm' )+
 			'</div>'+
+			'<div class="'+classPrefix+'-error"/>'+
 		'</div>'
 	);
 
@@ -6826,6 +7255,7 @@ Editor.DateTime = function ( input, opts ) {
 		title:     structure.find( '.'+classPrefix+'-title' ),
 		calendar:  structure.find( '.'+classPrefix+'-calendar' ),
 		time:      structure.find( '.'+classPrefix+'-time' ),
+		error:     structure.find( '.'+classPrefix+'-error' ),
 		input:     $(input)
 	};
 
@@ -6850,7 +7280,8 @@ Editor.DateTime = function ( input, opts ) {
 
 	this.dom.container
 		.append( this.dom.date )
-		.append( this.dom.time );
+		.append( this.dom.time )
+		.append( this.dom.error );
 
 	this.dom.date
 		.append( this.dom.title )
@@ -6869,8 +7300,23 @@ $.extend( Editor.DateTime.prototype, {
 	 */
 	destroy: function () {
 		this._hide();
-		this.dom.container().off('').empty();
+		this.dom.container.off().empty();
 		this.dom.input.off('.editor-datetime');
+	},
+
+	errorMsg: function ( msg ) {
+		var error = this.dom.error;
+
+		if ( msg ) {
+			error.html( msg );
+		}
+		else {
+			error.empty();
+		}
+	},
+
+	hide: function () {
+		this._hide();
 	},
 
 	max: function ( date ) {
@@ -6970,6 +7416,7 @@ $.extend( Editor.DateTime.prototype, {
 		var classPrefix = this.c.classPrefix;
 		var container = this.dom.container;
 		var i18n = this.c.i18n;
+		var onChange = this.c.onChange;
 
 		if ( ! this.s.parts.date ) {
 			this.dom.date.css( 'display', 'none' );
@@ -7053,18 +7500,24 @@ $.extend( Editor.DateTime.prototype, {
 
 					that._setTime();
 					that._writeOutput( true );
+
+					onChange();
 				}
 				else if ( select.hasClass(classPrefix+'-minutes') ) {
 					// Minutes select
 					that.s.d.setUTCMinutes( val );
 					that._setTime();
 					that._writeOutput( true );
+
+					onChange();
 				}
 				else if ( select.hasClass(classPrefix+'-seconds') ) {
 					// Seconds select
 					that.s.d.setSeconds( val );
 					that._setTime();
 					that._writeOutput( true );
+
+					onChange();
 				}
 
 				that.dom.input.focus();
@@ -7139,6 +7592,8 @@ $.extend( Editor.DateTime.prototype, {
 						setTimeout( function () {
 							that._hide();
 						}, 10 );
+
+						onChange();
 					}
 				}
 				else {
@@ -7313,7 +7768,7 @@ $.extend( Editor.DateTime.prototype, {
 	 * @private
 	 */
 	_htmlMonth: function ( year, month ) {
-		var now    = new Date(),
+		var now    = this._dateToUtc( new Date() ),
 			days   = this._daysInMonth( year, month ),
 			before = new Date( Date.UTC(year, month, 1) ).getUTCDay(),
 			data   = [],
@@ -7440,9 +7895,10 @@ $.extend( Editor.DateTime.prototype, {
 	},
 
 	/**
-	 * Create a cell that contains week of the year - ISO style
+	 * Create a cell that contains week of the year - ISO8601
 	 *
-	 * Based on http://javascript.about.com/library/blweekyear.htm
+	 * Based on https://stackoverflow.com/questions/6117814/ and
+	 * http://techblog.procurios.nl/k/n618/news/view/33796/14863/
 	 *
 	 * @param  {integer} d Day of month
 	 * @param  {integer} m Month of year (zero index)
@@ -7451,8 +7907,13 @@ $.extend( Editor.DateTime.prototype, {
 	 * @private
 	 */
 	_htmlWeekOfYear: function ( d, m, y ) {
-		var onejan = new Date(y, 0, 1),
-			weekNum = Math.ceil((((new Date(y, m, d) - onejan) / 86400000) + onejan.getUTCDay()+1)/7);
+		var date = new Date( y, m, d, 0, 0, 0, 0 );
+
+		// First week of the year always has 4th January in it
+		date.setDate( date.getDate() + 4 - (date.getDay() || 7) );
+
+		var oneJan = new Date( y, 0, 1 );
+		var weekNum = Math.ceil( ( ( (date - oneJan) / 86400000) + 1)/7 );
 
 		return '<td class="'+this.c.classPrefix+'-week">' + weekNum + '</td>';
 	},
@@ -7764,6 +8225,8 @@ Editor.DateTime.defaults = {
 
 	momentLocale: 'en',
 
+	onChange: function () {},
+
 	secondsIncrement: 1,
 
 	// show the ISO week number at the head of the row
@@ -7917,6 +8380,10 @@ var baseFieldType = $.extend( true, {}, Editor.models.fieldType, {
 
 	disable: function ( conf ) {
 		conf._input.prop( 'disabled', true );
+	},
+
+	canReturnSubmit: function ( conf, node ) {
+		return true;
 	}
 } );
 
@@ -7986,25 +8453,32 @@ fieldTypes.textarea = $.extend( true, {}, baseFieldType, {
 
 fieldTypes.select = $.extend( true, {}, baseFieldType, {
 	// Locally "private" function that can be reused for the create and update methods
-	_addOptions: function ( conf, opts ) {
+	_addOptions: function ( conf, opts, append ) {
 		var elOpts = conf._input[0].options;
 		var countOffset = 0;
 
-		elOpts.length = 0;
+		if ( ! append ) {
+			elOpts.length = 0;
 
-		if ( conf.placeholder !== undefined ) {
-			countOffset += 1;
-			elOpts[0] = new Option( conf.placeholder, conf.placeholderValue !== undefined ?
-				conf.placeholderValue :
-				''
-			);
+			if ( conf.placeholder !== undefined ) {
+				var placeholderValue = conf.placeholderValue !== undefined ?
+					conf.placeholderValue :
+					'';
 
-			var disabled = conf.placeholderDisabled !== undefined ?
-				conf.placeholderDisabled :
-				true;
+				countOffset += 1;
+				elOpts[0] = new Option( conf.placeholder, placeholderValue );
 
-			elOpts[0].hidden = disabled; // can't be hidden if not disabled!
-			elOpts[0].disabled = disabled;
+				var disabled = conf.placeholderDisabled !== undefined ?
+					conf.placeholderDisabled :
+					true;
+
+				elOpts[0].hidden = disabled; // can't be hidden if not disabled!
+				elOpts[0].disabled = disabled;
+				elOpts[0]._editor_val = placeholderValue;
+			}
+		}
+		else {
+			countOffset = elOpts.length;
 		}
 
 		if ( opts ) {
@@ -8036,8 +8510,8 @@ fieldTypes.select = $.extend( true, {}, baseFieldType, {
 		return conf._input[0];
 	},
 
-	update: function ( conf, options ) {
-		fieldTypes.select._addOptions( conf, options );
+	update: function ( conf, options, append ) {
+		fieldTypes.select._addOptions( conf, options, append );
 
 		// Attempt to set the last selected value (set by the API or the end
 		// user, they get equal priority)
@@ -8117,17 +8591,24 @@ fieldTypes.select = $.extend( true, {}, baseFieldType, {
 
 fieldTypes.checkbox = $.extend( true, {}, baseFieldType, {
 	// Locally "private" function that can be reused for the create and update methods
-	_addOptions: function ( conf, opts ) {
+	_addOptions: function ( conf, opts, append ) {
 		var val, label;
-		var elOpts = conf._input[0].options;
-		var jqInput = conf._input.empty();
+		var jqInput = conf._input;
+		var offset = 0;
+
+		if ( ! append ) {
+			jqInput.empty();
+		}
+		else {
+			offset = $('input', jqInput).length;
+		}
 
 		if ( opts ) {
 			Editor.pairs( opts, conf.optionsPair, function ( val, label, i ) {
 				jqInput.append(
 					'<div>'+
-						'<input id="'+Editor.safeId( conf.id )+'_'+i+'" type="checkbox" />'+
-						'<label for="'+Editor.safeId( conf.id )+'_'+i+'">'+label+'</label>'+
+						'<input id="'+Editor.safeId( conf.id )+'_'+(i+offset)+'" type="checkbox" />'+
+						'<label for="'+Editor.safeId( conf.id )+'_'+(i+offset)+'">'+label+'</label>'+
 					'</div>'
 				);
 				$('input:last', jqInput).attr('value', val)[0]._editor_val = val;
@@ -8145,14 +8626,20 @@ fieldTypes.checkbox = $.extend( true, {}, baseFieldType, {
 
 	get: function ( conf ) {
 		var out = [];
-		conf._input.find('input:checked').each( function () {
-			out.push( this._editor_val );
-		} );
-		return ! conf.separator ?
+		var selected = conf._input.find('input:checked');
+
+		if ( selected.length ) {
+			selected.each( function () {
+				out.push( this._editor_val );
+			} );
+		}
+		else if ( conf.unselectedValue !== undefined ) {
+			out.push( conf.unselectedValue );
+		}
+
+		return conf.separator === undefined || conf.separator === null ?
 			out :
-			out.length === 1 ?
-				out[0] :
-				out.join(conf.separator);
+			out.join(conf.separator);
 	},
 
 	set: function ( conf, val ) {
@@ -8190,12 +8677,12 @@ fieldTypes.checkbox = $.extend( true, {}, baseFieldType, {
 		conf._input.find('input').prop('disabled', true);
 	},
 
-	update: function ( conf, options ) {
+	update: function ( conf, options, append ) {
 		// Get the current value
 		var checkbox = fieldTypes.checkbox;
 		var currVal = checkbox.get( conf );
 
-		checkbox._addOptions( conf, options );
+		checkbox._addOptions( conf, options, append );
 		checkbox.set( conf, currVal );
 	}
 } );
@@ -8203,17 +8690,24 @@ fieldTypes.checkbox = $.extend( true, {}, baseFieldType, {
 
 fieldTypes.radio = $.extend( true, {}, baseFieldType, {
 	// Locally "private" function that can be reused for the create and update methods
-	_addOptions: function ( conf, opts ) {
+	_addOptions: function ( conf, opts, append ) {
 		var val, label;
-		var elOpts = conf._input[0].options;
-		var jqInput = conf._input.empty();
+		var jqInput = conf._input;
+		var offset = 0;
+
+		if ( ! append ) {
+			jqInput.empty();
+		}
+		else {
+			offset = $('input', jqInput).length;
+		}
 
 		if ( opts ) {
 			Editor.pairs( opts, conf.optionsPair, function ( val, label, i ) {
 				jqInput.append(
 					'<div>'+
-						'<input id="'+Editor.safeId( conf.id )+'_'+i+'" type="radio" name="'+conf.name+'" />'+
-						'<label for="'+Editor.safeId( conf.id )+'_'+i+'">'+label+'</label>'+
+						'<input id="'+Editor.safeId( conf.id )+'_'+(i+offset)+'" type="radio" name="'+conf.name+'" />'+
+						'<label for="'+Editor.safeId( conf.id )+'_'+(i+offset)+'">'+label+'</label>'+
 					'</div>'
 				);
 				$('input:last', jqInput).attr('value', val)[0]._editor_val = val;
@@ -8277,11 +8771,11 @@ fieldTypes.radio = $.extend( true, {}, baseFieldType, {
 		conf._input.find('input').prop('disabled', true);
 	},
 
-	update: function ( conf, options ) {
+	update: function ( conf, options, append ) {
 		var radio = fieldTypes.radio;
 		var currVal = radio.get( conf );
 
-		radio._addOptions( conf, options );
+		radio._addOptions( conf, options, append );
 
 		// Select the current value if it exists in the new data set, otherwise
 		// select the first radio input so there is always a value selected
@@ -8307,10 +8801,6 @@ fieldTypes.date = $.extend( true, {}, baseFieldType, {
 
 			if ( ! conf.dateFormat ) {
 				conf.dateFormat = $.datepicker.RFC_2822;
-			}
-
-			if ( conf.dateImage === undefined ) {
-				conf.dateImage = "../../images/calender.png";
 			}
 
 			// Allow the element to be attached to the DOM
@@ -8375,8 +8865,16 @@ fieldTypes.datetime = $.extend( true, {}, baseFieldType, {
 
 		conf._picker = new Editor.DateTime( conf._input, $.extend( {
 			format: conf.format, // can be undefined
-			i18n: this.i18n.datetime
+			i18n: this.i18n.datetime,
+			onChange: function () {
+				_triggerChange( conf._input );
+			}
 		}, conf.opts ) );
+
+		conf._closeFn = function () {
+			conf._picker.hide();
+		};
+		this.on( 'close', conf._closeFn );
 
 		return conf._input[0];
 	},
@@ -8393,7 +8891,12 @@ fieldTypes.datetime = $.extend( true, {}, baseFieldType, {
 		return conf._picker.owns( node );
 	},
 
+	errorMessage: function ( conf, msg ) {
+		conf._picker.errorMsg( msg );
+	},
+
 	destroy: function ( conf ) {
+		this.off( 'close', conf._closeFn );
 		conf._picker.destroy();
 	},
 
@@ -8459,6 +8962,10 @@ fieldTypes.upload = $.extend( true, {}, baseFieldType, {
 	disable: function ( conf ) {
 		conf._input.find('input').prop('disabled', true);
 		conf._enabled = false;
+	},
+
+	canReturnSubmit: function ( conf, node ) {
+		return false;
 	}
 } );
 
@@ -8535,6 +9042,10 @@ fieldTypes.uploadMany = $.extend( true, {}, baseFieldType, {
 	disable: function ( conf ) {
 		conf._input.find('input').prop('disabled', true);
 		conf._enabled = false;
+	},
+
+	canReturnSubmit: function ( conf, node ) {
+		return false;
 	}
 } );
 
@@ -8573,7 +9084,7 @@ Editor.prototype.CLASS = "Editor";
  *  @default   See code
  *  @static
  */
-Editor.version = "1.5.6";
+Editor.version = "1.6.0";
 
 
 // Event documentation for JSDoc

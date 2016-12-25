@@ -8,6 +8,8 @@
                 "async": true,
                 "crossDomain": true,
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -23,7 +25,7 @@
                         "PublicKey": accounteditor.field('PublicKey').val()
 
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             },
             "create": {
@@ -31,6 +33,8 @@
                 "async": true,
                 "crossDomain": true,
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -44,7 +48,7 @@
                         "MchKey": accounteditor.field('MchKey').val(),
                         "PublicKey": accounteditor.field('PublicKey').val()
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             }
 
@@ -128,16 +132,17 @@
         } else {
             accounteditor.disable(["MerchantName", "UniqueID", "PaymentMethod"]);
         }
-
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -169,17 +174,18 @@
         accounteditor.enable(["MerchantName", "PaymentMethod","MchPublicKey","PublicKey"]);
 
         var selectMerchant = [], selectPaymentMethod = []
-
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
 
         $.ajax({
             "url": sysSettings.domainPath+"RaymSP_GatewayPaymentMerchant_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -258,12 +264,16 @@
             "crossDomain": true,
             "type": "POST",
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentAccount",
-            "data": {
-                    "token": SecurityManager.generate(),
-                    "username": SecurityManager.username
-                    },
-            dataType: "json",
-            dataSrc: function (data) {
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {};
+                param.token = SecurityManager.generate();
+                param.username = SecurityManager.username;
+                
+                return (JSON.stringify(param));
+            },
+            "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;
 

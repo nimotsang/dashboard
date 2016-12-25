@@ -5,25 +5,11 @@
 
             "edit": {
                 "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
-                "type": "POST",
                 "async": true,
                 "crossDomain": true,
-                "data": function () {                  
-                        var param = {
-                            "token": SecurityManager.generate(),
-                            "username": SecurityManager.username,
-                            "sku": editor.field('ProductCode').val(),
-                            "Short_name": editor.field('ProductCode').val(),
-                            "price": editor.field('ProductCode').val(),
-                            "Long_name": editor.field('ProductCode').val()
-                        }
-                        return param;
-                    } 
-            },
-            "create": {
-
-                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -33,8 +19,28 @@
                         "price": editor.field('ProductCode').val(),
                         "Long_name": editor.field('ProductCode').val()
                     }
-                    return param;
-                }
+                    return JSON.stringify(param);
+                },
+            },
+            "create": {
+
+                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
+                "async": true,
+                "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
+                "data": function () {
+                    var param = {
+                        "token": SecurityManager.generate(),
+                        "username": SecurityManager.username,
+                        "sku": editor.field('ProductCode').val(),
+                        "Short_name": editor.field('ProductCode').val(),
+                        "price": editor.field('ProductCode').val(),
+                        "Long_name": editor.field('ProductCode').val()
+                    }
+                    return JSON.stringify(param);
+                },
             }
         },
         idSrc: 'ProductCode',
@@ -102,16 +108,17 @@
 
         // Get existing options
         exdata = data
-
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -182,17 +189,18 @@
     editor.on('initCreate', function (e, node, data){
         editor.enable(["ProductCode"]);
         var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
-
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
 
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -266,19 +274,17 @@
         editor.field('ProductCode').input().on('blur', function () {
             var ProductCode = editor.field('ProductCode');
             if (ProductCode.val()) {
-                var whName = 'Product_Code =' + '"'+ ProductCode.val() + '"';
+                param.tbName = 'Product';
+                param.colName = 'Product_Code';
+                param.whName = 'Product_Code =' + '"'+ ProductCode.val() + '"';
                 $.ajax({
                     "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
                     "type": "POST",
                     "async": true,
                     "crossDomain": true,
-                    "data": {
-                        "token": SecurityManager.generate(),
-                        "username": SecurityManager.username,
-                        "colName": 'Product_Code',
-                        "tbName": 'Product',
-                        "whName": whName
-                    },
+                    "dataType": "json",
+                    "contentType": "application/json; charset=utf-8",
+                    "data": JSON.stringify(param),
                     "success": function (data) {
                         if (data.ResultSets[0][0]) {
                             editor.field('ProductCode').focus()
@@ -325,17 +331,20 @@
         ], 
         ajax: {
             "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
-            "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username,
-                "colName": 'ProductUniqueId, ProductCode, ProductName, ColorChart,SizeChart,RetailPrice, CostPrice, Season, Supplier',
-                "tbName": 'V_RAMS_SearchProductByKeyword'
-
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                    "colName": 'ProductUniqueId, ProductCode, ProductName, ColorChart,SizeChart,RetailPrice, CostPrice, Season, Supplier',
+                    "tbName": 'V_RAMS_SearchProductByKeyword'
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;

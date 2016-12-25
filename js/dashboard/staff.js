@@ -5,9 +5,11 @@
 
             "edit": {
                 "url": sysSettings.domainPath + "RaymSP_GatewayPaymentUser",
-                "type": "POST",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     if (openValPassWord === editor.field('PassWord').val()) {
                         var param = {
@@ -20,7 +22,7 @@
                             "Name": editor.field('UserName').val(),
                             "PositionName": editor.field('PositionName').val()
                         }
-                        return param;
+                        return JSON.stringify(param);
                     } else {
                         var param = {
                             "token": SecurityManager.generate(),
@@ -33,7 +35,7 @@
                             "PassWord": CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([editor.field('PassWord').val(), SecurityManager.salt].join(':'), SecurityManager.salt)),
                             "PositionName": editor.field('PositionName').val()
                         }
-                        return param;
+                        return JSON.stringify(param);
                     }
 
                 }
@@ -41,7 +43,11 @@
             "create": {
 
                 "url": sysSettings.domainPath + "RaymSP_GatewayPaymentUser",
+                "async": true,
+                "crossDomain": true,
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -54,7 +60,7 @@
                         "PassWord": CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([editor.field('PassWord').val(), SecurityManager.salt].join(':'), SecurityManager.salt)),
                         "PositionName": editor.field('PositionName').val()
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             }
 
@@ -154,18 +160,17 @@
         oStoreName = data.StoreName
         oPositionName = data.PositionName
         openValPassWord = data.PassWord
-
-
-
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -254,14 +259,18 @@
         ], **/
         ajax: {
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentUser",
-            "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;

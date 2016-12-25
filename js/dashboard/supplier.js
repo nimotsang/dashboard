@@ -5,9 +5,11 @@
 
             "edit": {
                 "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
-                "type": "POST",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {                  
                         var param = {
                             "token": SecurityManager.generate(),
@@ -24,13 +26,17 @@
                             "Contact": editor.field('Contact').val(),
                             "Notes": editor.field('Notes').val()
                         }
-                        return param;
+                        return JSON.stringify(param);
                     } 
             },
             "create": {
 
                 "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
+                "async": true,
+                "crossDomain": true,
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -40,25 +46,24 @@
                         "price": editor.field('price').val(),
                         "Long_name": editor.field('Long_name').val()
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             }
         },
         idSrc: 'Supplier_ID',
         table: '#SupplierTable',
         fields: [
-            { label: '供应商编号: ', name: 'Supplier_ID' },
-            { label: '供应商代码: ', name: 'Supplier_Code' },
-            { label: '供应商名称: ', name: 'Name' },
-            { label: '状态: ', name: 'Address' },
-            { label: '供应商编号: ', name: 'City' },
-            { label: '供应商代码: ', name: 'Province' },
-            { label: '供应商名称: ', name: 'ZipCode' },
-            { label: '状态: ', name: 'Telephone' },
-            { label: '供应商代码: ', name: 'Fax' },
-            { label: '供应商名称: ', name: 'Email' },
-            { label: '状态: ', name: 'Contact' },
-            { label: '状态: ', name: 'Notes' },
+            { label: '编号: ', name: 'Supplier_ID' },
+            { label: '代码: ', name: 'Supplier_Code' },
+            { label: '名称: ', name: 'Name' },
+            { label: '地址: ', name: 'Address' },
+            { label: '城市: ', name: 'City' },
+            { label: '省市: ', name: 'Province' },
+            { label: '电话: ', name: 'Telephone' },
+            { label: '传真: ', name: 'Fax' },
+            { label: '邮件: ', name: 'Email' },
+            { label: '联系人: ', name: 'Contact' },
+            { label: '备注: ', name: 'Notes' },
         ],
         //自定义语言
         i18n: {
@@ -110,22 +115,20 @@
         **/
         ajax: {
             "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
-            "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username,
-                "colName": function () {
-                    var colName = 'Supplier_ID,Supplier_Code, Name,CASE WHEN (Supplier.Status = 0)THEN N' + "'" + '不可用' + "'" + ' WHEN (Supplier.Status = 1)THEN N' + "'" + '可用' + "'" + ' end AS Status'+
-                        'Address, City, Province, ZipCode, Telephone, Fax, Email, Contact, Notes'
-
-                    ;
-                    return colName;
-                },
-                "tbName": 'Supplier'
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                    "colName": 'Supplier_ID,Supplier_Code, Name, Status ,Address, City, Province, ZipCode, Telephone, Fax, Email, Contact, Notes',
+                    "tbName": 'Supplier'
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;

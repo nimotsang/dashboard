@@ -90,6 +90,24 @@ $.extend( true, $.fn.dataTable.Editor.classes, {
 	}
 } );
 
+$.extend( true, DataTable.ext.buttons, {
+	create: {
+		formButtons: {
+			className: 'btn-primary'
+		}
+	},
+	edit: {
+		formButtons: {
+			className: 'btn-primary'
+		}
+	},
+	remove: {
+		formButtons: {
+			className: 'btn-danger'
+		}
+	}
+} );
+
 
 /*
  * Bootstrap display controller - this is effectively a proxy to the Bootstrap
@@ -126,13 +144,14 @@ DataTable.Editor.display.bootstrap = $.extend( true, {}, DataTable.Editor.models
 					self._dte.background();
 				}
 			} );
-
-			dte.on( 'open.dtebs', function ( e, type ) {
-				if ( type === 'inline' || type === 'bubble' ) {
-					$('div.DTE input[type=text], div.DTE select, div.DTE textarea').addClass( 'form-control' );
-				}
-			} );
 		}
+
+		// For each instance we need to know when it is opened
+		dte.on( 'open.dtebs', function ( e, type ) {
+			if ( type === 'inline' || type === 'bubble' ) {
+				$('div.DTE input[type=text], div.DTE select, div.DTE textarea').addClass( 'form-control' );
+			}
+		} );
 
 		return self;
 	},

@@ -31,22 +31,25 @@ $(document).ready(function () {
             alert("密码输入为空");
             return false; }
         SecurityManager.generate(u, p);
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
         $.ajax({
             type: "POST",
             "async": true,
             "crossDomain": true,
-            url: sysSettings.domainPath + "/RaymSP_GatewayPaymentLogin/",
-            data: {
-                "token": SecurityManager.generate(),
-                "username":SecurityManager.username
-            },
-            dataType: "json",
-            error: function (data) {
+            "url": sysSettings.domainPath + "/RaymSP_GatewayPaymentLogin/",
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
+
+
+            "error": function (data) {
                 if ((data.status && data.status === '401') || (data.responseJSON && data.responseJSON.Message == 'Authorization has been denied for this request.')) {
                     return alert("用户名或者密码错误！");
                 }
             },
-            success: function (data) {
+            "success": function (data) {
                 data = data.ResultSets[0][0]
                 if (u === data.UserName) {
                     window.location = "index.html";

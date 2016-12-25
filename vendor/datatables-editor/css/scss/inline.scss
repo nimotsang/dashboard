@@ -47,15 +47,16 @@ div.DTE_Inline {
 		margin: -6px 0;
 	}
 
-	&.DTE_Processing:after {
-		position: absolute;
-		content: ' ';
-		display: block;
-		top: 4px;
-		right: 10px;
-		height: 12px;
-		width: 17px;
-		background: url('../images/ajax-loader-small.gif') no-repeat top left;
+	div.DTE_Field_Error,
+	div.DTE_Form_Error {
+		font-size: 11px;
+		line-height: 1.2em;
+		padding: 0;
+		margin-top: 10px;
+
+		&.empty {
+			margin-top: 0;
+		}
 	}
 }
 

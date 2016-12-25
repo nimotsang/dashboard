@@ -5,25 +5,11 @@
 
             "edit": {
                 "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
-                "type": "POST",
                 "async": true,
                 "crossDomain": true,
-                "data": function () {                  
-                        var param = {
-                            "token": SecurityManager.generate(),
-                            "username": SecurityManager.username,
-                            "sku": editor.field('product_code').val(),
-                            "Short_name": editor.field('Short_name').val(),
-                            "price": editor.field('price').val(),
-                            "Long_name": editor.field('Long_name').val()
-                        }
-                        return param;
-                    } 
-            },
-            "create": {
-
-                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -33,8 +19,28 @@
                         "price": editor.field('price').val(),
                         "Long_name": editor.field('Long_name').val()
                     }
-                    return param;
-                }
+                    return JSON.stringify(param);
+                },
+            },
+            "create": {
+
+                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
+                "async": true,
+                "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
+                "data": function () {
+                    var param = {
+                        "token": SecurityManager.generate(),
+                        "username": SecurityManager.username,
+                        "sku": editor.field('product_code').val(),
+                        "Short_name": editor.field('Short_name').val(),
+                        "price": editor.field('price').val(),
+                        "Long_name": editor.field('Long_name').val()
+                    }
+                    return JSON.stringify(param);
+                },
             }
         },
         idSrc: 'product_code',
@@ -137,14 +143,18 @@
         ], **/
         ajax: {
             "url": sysSettings.domainPath + "Raymsp_GatewaypaymentProduct_Query",
-            "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;

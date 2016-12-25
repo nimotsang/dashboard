@@ -5,9 +5,11 @@
 
             "edit": {
                 "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStore",
-                "type": "POST",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -17,15 +19,17 @@
                         "Storeid": Number(editor.field('Storeid').val()),
                         "StoreName": editor.field('StoreName').val()
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             },
             "create": {
 
                 "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStore",
-                "type": "POST",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -35,7 +39,7 @@
                         "Storeid": Number(editor.field('Storeid').val()),
                         "StoreName": editor.field('StoreName').val()
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             }
 
@@ -106,17 +110,18 @@
 
         // Get existing options
         oMerchantName = data.MerchantName
-
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
 
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -137,15 +142,17 @@
     editor.on('initCreate', function () {
         editor.enable(["Storeid", "MerchantName"]);
         var selectMerchant = [];
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -201,15 +208,20 @@
             { "width": "20%", "targets": 0 },
             { "width": "20%", "targets": 1 }
         ],
-        ajax:{
-            "type": "POST",
-
+        ajax: {
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStore",
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "async": true,
+            "crossDomain": true,
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc":function (data) {
                 data = data.ResultSets[0]
                 return data;

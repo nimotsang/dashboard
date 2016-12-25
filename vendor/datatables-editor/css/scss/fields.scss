@@ -33,19 +33,30 @@ div.DTE_Field {
 		width: 100%;
 	}
 
+	label div.DTE_Label_Info {
+		font-size: 0.85em;
+		margin-top: 0.25em;
 
-	div.DTE_Field_Info,
-	div.DTE_Field_Message {
-		font-size: 11px;
-		line-height: 1em;
+		&:empty {
+			margin-top: 0;
+		}
 	}
 
+	div.DTE_Field_Info,
+	div.DTE_Field_Message,
 	div.DTE_Field_Error {
 		font-size: 11px;
 		line-height: 1em;
-		display: none;
-		color: red;
 		margin-top: 5px;
+
+		&:empty {
+			margin-top: 0;
+		}
+	}
+
+	div.DTE_Field_Error {
+		display: none;
+		color: #b11f1f;
 	}
 
 	div.multi-value {
@@ -63,8 +74,28 @@ div.DTE_Field {
 			color: #666;
 		}
 
+		&.multi-noEdit {
+			border: 1px solid #ccc;
+			cursor: auto;
+			background-color: #fcfcfc;
+
+			&:hover {
+				background-color: #fcfcfc;
+			}
+		}
+
 		&:hover {
 			background-color: #f1f1f1;
+		}
+	}
+
+	&.disabled {
+		color: grey;
+
+		div.multi-value {
+			cursor: default;
+			border: 1px dotted #aaa;
+			background-color: transparent;
 		}
 	}
 

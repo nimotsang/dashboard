@@ -142,43 +142,87 @@
                     { label: '状态: ', name: 'Size' },
                     { label: '类型: ', name: 'Size_ID' },
                     { label: '状态: ', name: 'NewPrice' },
-                    { label: '状态: ', name: 'RetailPrice' },
+                    { label: '状态: ', name: 'OldPrice' },
                     { label: '状态: ', name: 'LandedCost' },
+                    { label: '价格编辑条件: ', name: 'PriceEditCondition' },
 
                 ],
 
                 ajax: function (method, url, data, success, error) {
                     // NOTE - THIS WILL WORK FOR EDIT ONLY AS IS
                     if (data.action === 'edit') {
+                        var pcval = $.map(data.data, function (val, key) {
+                            val.DT_RowId = key;
+                            var nval = {};
+                            //nval.token = SecurityManager.generate();
+                            nval.username = SecurityManager.username;
+                            nval.session_number = editor.field('session_number').val();
+                            nval.sequence_number = val.Sequence_number;
+                            nval.product_id = val.Product_ID;
+                            nval.color_id = val.Color_ID;
+                            nval.size_id = val.Size_ID;
+                            nval.old_price = val.OldPrice;
+                            nval.new_price = val.NewPrice;
+                            nval.store_code_id = editor.field('store_name').val();
+                            nval.Store_Grid_Id = editor.field('grid_name').val();
+                            nval.Ledger = 'N';
+                            nval.ExchangeRate = 0;
+                            nval.AvailableQuantity = null;
+                            return (nval);
+                        });
+                        $.ajax({
+                            "url": sysSettings.domainPath + "Gatewaypayment_Price_change_detail1",
+                            "type": "POST",
+                            "async": true,
+                            "crossDomain": true,
+                            "dataType": "json",
+                            "Content-Type": "application/json",
+                            "data": pcval[0], 
+                            "success":function(json){
+
+                                json.data = json.ResultSets[0];
+                                success(json)
+                            }
+                        })
+                    }
+                }
+            });
+
+            editor.on('postSubmit', function (e, json) {
+                json.data = json.ResultSets[0];
+            });
+                        /**    
                         success({
                             data: $.map(data.data, function (val, key) {
                                 val.DT_RowId = key;
                                 var nval = {};
-                                nval.session_number = Number(editor.field('session_number').val());
-                                nval.sequence_number =Number(val.Sequence_number);
-                                nval.color_id = $.isNumeric(val.Color_ID) ? Number(val.Color_ID) : null;
-                                nval.product_id = Number(val.Product_ID);
-                                nval.size_id = $.isNumeric(val.Size_ID)?Number(val.Size_ID):null;
-                                nval.store_code_id = $.isNumeric(editor.field('store_name').val()) ? Number(editor.field('store_name').val()):null;
-                                nval.old_price = Number(val.RetailPrice);
-                                nval.new_price = Number(val.NewPrice);
+                                nval.session_number = editor.field('session_number').val();
+                                nval.sequence_number = val.Sequence_number;
+                                nval.product_id = val.Product_ID;
+                                nval.color_id = val.Color_ID;
+                                nval.size_id = val.Size_ID;
+                                nval.old_price = val.OldPrice;
+                                nval.new_price = val.NewPrice;
+                                nval.store_code_id = editor.field('store_name').val();
+                                nval.Store_Grid_Id = editor.field('grid_name').val();
                                 nval.Ledger = 'N';
-                                nval.Store_Grid_Id = $.isNumeric(editor.field('grid_name').val()) ? Number(editor.field('grid_name').val()) : null;
                                 nval.ExchangeRate = 0;
                                 nval.AvailableQuantity = null;
 
+                                //nval.token = SecurityManager.generate();
+                                //nval.username = SecurityManager.username;
                                 if (pcval.length > 0) {
                                     for (x in pcval) {
                                         if (pcval[x].product_id === nval.product_id && pcval[x].color_id === nval.color_id && pcval[x].size_id === nval.size_id) {
                                             pcval.splice(x, 1, nval);
-                                        } else if (pcval.length-1>0) {
+                                        } else if (pcval.length - 1 > 0) {
                                             continue;
                                         } else {
                                             pcval.push(nval);
                                         }
                                     }
                                 }
-                                else{
+                                else {
                                     pcval.push(nval);
                                 }
                                 console.log(pcval)
@@ -189,7 +233,9 @@
                     }
                 }
 
+
             });
+            **/
             //初始化报表-价格调整明细
             pctable = $("#PriceChangeTable").DataTable({
                 processing: true,
@@ -204,8 +250,7 @@
                 { "data": "Color" },
                 { "data": "Size" },
                 { "data": "NewPrice", "defaultContent": "编辑价格", "className": 'editable' },
-                { "data": "RetailPrice" },
-                { "data": "LandedCost" },
+                { "data": "OldPrice" }
                 ],
                 language: {
                     url: "../vendor/datatables/Chinese.json",
@@ -219,13 +264,14 @@
 
 
             });
+
             $('#PriceChangeTable').on('click', 'tbody td.editable', function (e) {
                 pceditor.inline(this, {
                     onBlur: 'submit',
                     //onComplete:'none',
                     submit: 'all',
                     //onReturn: 'none',
-                    onBackground: close
+                    //onBackground: close
                 });
             });
 
@@ -240,17 +286,15 @@
         //搜索条件下拉框
         var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
         var selectStore = [], selectPCGrid = [], selectDivision = [], selectDepartment = [], selectSubDepartment = [], selectClass = [];
-        var param = {};
-        param.token = SecurityManager.generate();
-        param.username = SecurityManager.username;
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
+            "data": {
+                "token": SecurityManager.generate(),
+                "username": SecurityManager.username
+            },
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -292,9 +336,10 @@
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
+            "data": {
+                "token": SecurityManager.generate(),
+                "username": SecurityManager.username
+            },
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -325,9 +370,6 @@
         var exdata = [];
         var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
         var selectStore = [], selectPCGrid = [], selectDivision = [], selectDepartment = [], selectSubDepartment = [], selectClass = [];
-        var param = {};
-        param.token = SecurityManager.generate();
-        param.username = SecurityManager.username;
         // Get existing options
         exdata = data
         $.ajax({
@@ -335,9 +377,10 @@
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
+            "data": {
+                "token": SecurityManager.generate(),
+                "username": SecurityManager.username
+            },
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -379,9 +422,10 @@
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
+            "data": {
+                "token": SecurityManager.generate(),
+                "username": SecurityManager.username
+            },
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -440,7 +484,7 @@
             }
             
         });
-        param.tbName = 'price_change_detail pcd ' +
+        var tbName = 'price_change_detail pcd ' +
         'INNER JOIN [dbo].Price_Cost_Detail pcosd on pcd.product_id=pcosd.Product_id ' +
         'INNER JOIN [dbo].product as prod on pcd.product_id=prod.Product_id ' +
         'INNER JOIN [dbo].PRODUCT_NAME pron on pcd.product_id=pron.Product_ID ' +
@@ -448,18 +492,21 @@
         'LEFT JOIN [dbo].color col on colse.color_id= col.color_id ' +
         'LEFT JOIN [dbo].size_sequence sizse on pcd.Size_id=sizse.size_id ' +
         'LEFT JOIN [dbo].size siz on sizse.size_id=siz.size_id';
-        param.whName = 'session_number=' + exdata.session_number;
-        param.colName = 'Session_number, pcd.sequence_number as Sequence_number, pcd.product_id as Product_ID, prod.product_code as ProductCode, pron.Short_name as ProductName,col.description as Color,pcd.color_id as Color_ID, siz.description as Size, pcd.size_id as Size_ID, new_price as NewPrice, old_price as RetailPrice, pcosd.Landed_Cost as LandedCost';
-
-
+        var condition = 'session_number=' + exdata.session_number;
         $.ajax({
             "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
             "type": "POST",
             "async": true,
             "crossDomain": true,
+            "data": {
+                "token": SecurityManager.generate(),
+                "username": SecurityManager.username,
+                "colName": 'Session_number, pcd.sequence_number as Sequence_number, prod.product_code as ProductCode, pcd.product_id as Product_ID, pcd.color_id as Color_ID, pcd.size_id as Size_ID, pron.Short_name as ProductName,col.description as Color, siz.description as Size, new_price as NewPrice, old_price as OldPrice, pcosd.Landed_Cost as LandedCost',
+                "tbName": tbName,
+                "whName": condition
+
+            },
             "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 pctable.clear().draw();//重置产品明细列表
@@ -543,18 +590,14 @@
         ],
         ajax: {
             "url": sysSettings.domainPath + "RaymSP_GatewaypaymentPriceGet",
+            "type": "POST",
             "async": true,
             "crossDomain": true,
-            "type": "POST",
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": function () {
-                var param = {
-                    "token": SecurityManager.generate(),
-                    "username": SecurityManager.username,
-                }
-                return JSON.stringify(param);
+            "data": {
+                "token": SecurityManager.generate(),
+                "username": SecurityManager.username
             },
+            "dataType": "json",
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;
@@ -601,30 +644,29 @@
                if (editor.field('session_number').val().length > 0 && editor.field('session_status').val() === 2) {
                    this.blur();
                } else {
-                   var param = {};
-                   param.token = SecurityManager.generate();
-                   param.username = SecurityManager.username;
-                   param.session_number= editor.field('session_number').val(),
-                   param.description= editor.field('description').val(),
-                   param.session_type= editor.field('session_type').val(),
-                   param.session_status= editor.field('session_status').val(),
-                   param.start_date= editor.field('start_date').val(),
-                   param.end_date= editor.field('end_date').val(),
-                   param.store_name= editor.field('store_name').val(),
-                   param.grid_name= editor.field('grid_name').val()
                    $.ajax({
                        "url": sysSettings.domainPath + "Gatewaypayment_Price_change_header",
+                       "type": "POST",
                        "async": true,
                        "crossDomain": true,
-                       "type": "POST",
-                       "dataType": "json",
-                       "contentType": "application/json; charset=utf-8",
-                       "data": JSON.stringify(param),
+                       "data": {
+                           "token": SecurityManager.generate(),
+                           "username": SecurityManager.username,
+                           "session_number": editor.field('session_number').val(),
+                           "description": editor.field('description').val(),
+                           "session_type": editor.field('session_type').val(),
+                           "session_status": editor.field('session_status').val(),
+                           "start_date": editor.field('start_date').val(),
+                           "end_date": editor.field('end_date').val(),
+                           "store_name": editor.field('store_name').val(),
+                           "grid_name": editor.field('grid_name').val()
+
+                       },
                        "success": function (data) {
                            if (typeof (data.ResultSets[0][0]) !== 'undefined') {
                                table.draw();
                                editor.message('保存成功').true;
-                               return false;
+                               
                                //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
                                //table.row('#'+ data.ResultSets[0][0].session_number).remove();
                                //table.row.add(data.ResultSets[0][0]).draw();
@@ -687,7 +729,6 @@
                             '<th>尺码代码</th>' +
                             '<th>新价格</th>' +
                             '<th>当前价格</th>' +
-                            '<th>成本</th>' +
                             '</tr>' +
                             '</thead>' +
                             '</table>' +
@@ -703,9 +744,6 @@
         $('div.DTE_Field').addClass('product-column-feild');
         $('div.DTE_Body.modal-body').css("padding", "0px");
         $("a#li-tab3,a#li-tab2").css("display", "block");
-        //add editer message form(layout) to header
-        $('.DTE_Form_Info').css({"float":"right","margin":"10px"});
-
         ////move the editor elements to respective tab
         $(editor.node(['session_number', 'description', 'session_type', 'session_status', 'start_date', 'end_date', 'store_name', 'grid_name'])).appendTo('.tab-1');
         $(editor.node(['ProductCode', 'ProductName', 'ColorChart', 'SizeChart', 'Supplier', 'ProductType', 'Season', 'Division', 'Department', 'SubDepartment', 'Class', 'RetailPrice', 'CostPrice'])).appendTo('.tab-2');
@@ -721,7 +759,6 @@
                     //参数设置 Tab1
                     case 'li-tab1': {
                         tab1btn()
-                        editor.message('');
                         break;
                     }
                         //产品查询条件 Tab2
@@ -757,20 +794,21 @@
                                         });
                                         //测试用
                                         //console.log(condition);
-                                        var param = {};
-                                        param.token = SecurityManager.generate();
-                                        param.username = SecurityManager.username;
-                                        param.tbName = 'V_Gatewaypayment_SearchProduct';
-                                        param.colName = 'UniqueId, Product_ID, ProductCode, ProductName, Supplier, RetailPrice,LandedCost, Bin_Qty_Stocks, Color,Color_ID, Size, Size_ID';
-                                        param.whName = condition;
+
                                         $.ajax({
                                             "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
                                             "type": "POST",
                                             "async": true,
                                             "crossDomain": true,
+                                            "data": {
+                                                "token": SecurityManager.generate(),
+                                                "username": SecurityManager.username,
+                                                "colName": 'UniqueId, Product_ID, ProductCode, ProductName, Supplier, RetailPrice, RetailPrice as NewPrice, LandedCost, Bin_Qty_Stocks, Color,Color_ID, Size, Size_ID',
+                                                "tbName": 'V_Gatewaypayment_SearchProduct',
+                                                "whName": condition
+
+                                            },
                                             "dataType": "json",
-                                            "contentType": "application/json; charset=utf-8",
-                                            "data": JSON.stringify(param),
                                             "success": function (data) {
                                                 data = data.ResultSets[0]
 
@@ -780,6 +818,8 @@
                                                     ptable.row.add(node);
                                                 })
                                                 ptable.draw()
+                                                $(pceditor.node('PriceEditCondition')).appendTo('#ProductTable_wrapper .col-sm-6:eq(0)');
+                                                $(pceditor.node('PriceEditCondition')).css("padding-top","0")
                                                 $('a[href="#tab-3"]').tab('show');
 
                                             }
@@ -802,7 +842,7 @@
                         ]
                         )
                         }
-                        editor.message('');
+
                         break;
                     }
                         //产品列表 Tab3
@@ -841,42 +881,51 @@
                             ]
                         )
                         }
-                        editor.message('');
+
                         break;
                     }
                         //产品价格调整 Tab 4
                     case 'li-tab4': {
-                        //$('.DTE_Form_Info').appendTo('#PriceChangeTable_wrapper .col-sm-6:eq(0)');
                         if (editor.field("session_number").val().length>0 && editor.field("session_status").val() !== 2) {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '保存', className: 'pcbtn', fn: function () {
                                         if (editor.field('session_number').val().length > 0 && editor.field('session_status').val() === 2) {
-                                           return this.blur();
+                                            this.blur();
                                         }
-                                        else if (pcval.length>0) {
-                                            var param = {};
-                                            param.token = SecurityManager.generate();
-                                            param.username = SecurityManager.username;
-                                            param.PCD = pcval;
+                                        else {
+                                            //pcval.token = SecurityManager.generate();
+                                            //pcval.username = SecurityManager.username;
+                                            //pcval=JSON.stringify(pcval)
+
+                                            var request = {
+                                                //token: SecurityManager.generate(),
+                                                "username": SecurityManager.username,
+                                                "PCD": pcval
+                                            };
+
+                                        };
+
                                             $.ajax({
-                                                "url": sysSettings.domainPath + "Gatewaypayment_Price_change_detail",
+                                                "url": sysSettings.domainPath + "Gatewaypayment_Price_change_detail1",
                                                 "type": "POST",
                                                 "async": true,
                                                 "crossDomain": true,
                                                 "dataType": "json",
-                                                "contentType": "application/json; charset=utf-8",
-                                                "data": JSON.stringify(param),
+                                                "Content-Type": "application/json",
+                                                "data": JSON.stringify(request),
+
+                                                    /**{
+                                                    "token": SecurityManager.generate(),
+                                                    "username":SecurityManager.username,
+                                                    pcval: pcval
+
+                                                },**/
+                                                //"tranditional":true,
                                                 "success": function (data) {
                                                     if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                                                        data = data.ResultSets[0]
-                                                        pctable.clear();//重置产品明细列表
-                                                        data.forEach(function (node) {
-                                                            pctable.row.add(node);
-                                                        })
-                                                        pctable.draw();
+                                                        table.draw();
                                                         editor.message('保存成功').true;
-                                                        //alert('保存成功');
 
                                                         //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
                                                         //table.row('#'+ data.ResultSets[0][0].session_number).remove();
@@ -885,65 +934,13 @@
                                                     }
                                                 }
                                             })
-                                        }
-                                        else {
-                                            editor.message('没有需要保存的数据').true;
 
                                         }
 
-                                    }
-                                },
-                                {
-                                    extend: 'tabbtn', label: '批准', className: 'pcbtn', fn: function () {
-
-                                            if (editor.field('session_number').val().length > 0 && editor.field('session_status').val() === 2) {
-                                                this.blur();
-                                            } else {
-                                                var param = {};
-                                                param.token = SecurityManager.generate();
-                                                param.username = SecurityManager.username;
-                                                param.session_number= editor.field('session_number').val(),
-                                                param.description= editor.field('description').val(),
-                                                param.session_type= editor.field('session_type').val(),
-                                                param.session_status= 2,
-                                                param.start_date= editor.field('start_date').val(),
-                                                param.end_date= editor.field('end_date').val(),
-                                                param.store_name= editor.field('store_name').val(),
-                                                param.grid_name= editor.field('grid_name').val()
-                                                $.ajax({
-                                                    "url": sysSettings.domainPath + "Gatewaypayment_Price_change_header",
-                                                    "async": true,
-                                                    "crossDomain": true,
-                                                    "type": "POST",
-                                                    "dataType": "json",
-                                                    "contentType": "application/json; charset=utf-8",
-                                                    "data": JSON.stringify(param),
-                                                    "success": function (data) {
-                                                        if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                                                            editor.field('session_status').val(2);
-                                                            editor.disable();
-                                                            $("a#li-tab3,a#li-tab2").css("display", "none")
-                                                            $('#PriceChangeTable').off('click', 'tbody td.editable');
-                                                            table.ajax.reload();
-                                                            table.draw();
-                                                            $('a[href="#tab-1"]').tab('show');
-                                                            editor.message('审批成功').true;
-                                                            return false;
-                                                            //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
-                                                            //table.row('#'+ data.ResultSets[0][0].session_number).remove();
-                                                            //table.row.add(data.ResultSets[0][0]).draw();
-
-                                                        }
-                                                    }
-                                                })
-
-                                            }
-
-                                    }
-                                },
+                                    },
+                                { extend: 'tabbtn', label: '批准', className: 'pcbtn', fn: function () { document.getElementById("DTE_Field").reset(); } },
                             ])
                         }
-                        editor.message('');
                         break;
                     }
                 }
