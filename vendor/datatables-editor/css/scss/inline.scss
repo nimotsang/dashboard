@@ -54,7 +54,7 @@ div.DTE_Inline {
 		padding: 0;
 		margin-top: 10px;
 
-		&.empty {
+		&:empty {
 			margin-top: 0;
 		}
 	}

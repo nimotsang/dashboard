@@ -17,4 +17,69 @@
 }
 
 
+/* Dashboard customized CSS Panel */
+div.multi-column {
 
+    width: 50%;
+    height:auto;
+    position:relative;
+}
+
+div.multi-column-body{
+
+    float:left;
+    border-bottom:1px solid #e5e5e5;
+    bottom:5px;
+}
+
+div.multi-column-feild {
+    float: left;
+    width: 50%;
+
+    clear: none;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box; /* Firefox */
+    -webkit-box-sizing:border-box; /* Safari */
+}
+ 
+div.multi-column-feild:after {
+    content: ' ';
+    display: block;
+    clear: both;
+}
+
+
+div.product-column {
+
+    width: 75%;
+    height:auto;
+    position:relative;
+}
+
+div.product-column-body{
+
+    float:left;
+    border-bottom:1px solid #e5e5e5;
+    bottom:5px;
+}
+
+div.product-column-feild {
+    float: left;
+    width: 50%;
+
+    clear: none;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box; /* Firefox */
+    -webkit-box-sizing:border-box; /* Safari */
+}
+ 
+div.product-column-feild:after {
+    content: ' ';
+    display: block;
+    clear: both;
+}
+/* FOr Editor Field Inline Mode*/
+td.editable {
+        font-weight: bold;
+        width:10%;
+    }

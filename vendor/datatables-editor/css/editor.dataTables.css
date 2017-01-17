@@ -660,8 +660,8 @@ div.DTE_Inline div.DTE_Form_Error {
   padding: 0;
   margin-top: 10px;
 }
-div.DTE_Inline div.DTE_Field_Error.empty,
-div.DTE_Inline div.DTE_Form_Error.empty {
+div.DTE_Inline div.DTE_Field_Error:empty,
+div.DTE_Inline div.DTE_Form_Error:empty {
   margin-top: 0;
 }
 

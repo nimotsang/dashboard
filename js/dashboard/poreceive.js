@@ -1,44 +1,44 @@
 ﻿$(document).ready(function () {
-    //新增及修改价格调整
+    //新增及修改调整
+
     var editor = new $.fn.dataTable.Editor({
 
-        idSrc: 'session_number',
-        table: '#PriceTable',
+        idSrc: 'POUniqueId',
+        table: '#POTable',
         fields: [
-            //价格调整-参数设置
-            { label: '序号: ', name: 'session_number' },
-            { label: '描述: ', name: 'description' },
+            //调整-参数设置
+            { label: 'POUniqueId: ', name: 'POUniqueId', type: 'hidden' },
+            { label: 'POTUniqueId: ', name: 'POTUniqueId', type: 'hidden' },
+            { label: 'SUUniqueId: ', name: 'SUUniqueId', type: 'hidden' },
+            { label: 'RecStoreUniqueId: ', name: 'RecStoreUniqueId', type: 'hidden' },
+            { label: 'STUniqueId: ', name: 'STUniqueId', type: 'hidden' },
+            { label: 'PO单号: ', name: 'PONumber', type: 'readonly' },
+            { label: '收货单号: ', name: 'RMNumber', type: 'readonly' },
+            { label: '参考收货单号: ', name: 'RefRMNumber', type: 'readonly' },
+            { label: '收货门店: ', name: 'RecStore', type: 'readonly'},
             {
-                label: '类型: ', name: 'session_type', type: 'select', placeholder: '未定义', options: [
-                  { label: '调低价格', value: 0 },
-                  { label: '折扣', value: 1 },
-                  { label: '调高价格', value: 2 },
-                  { label: '初始化', value: 3 }
-                ],
-            },
-            {
-                label: '状态: ', name: 'session_status', type: 'select', placeholder: '未定义', options: [
-                    { label: '编辑中', value: 0 },
-                    { label: '已取消', value: 1 },
-                    { label: '已审核', value: 2 }
-                ],
-            },
-            {
-                label: '开始日期: ', name: 'start_date',
+                label: '创建日期: ', name: 'RMCreationDate',
                 type: 'datetime',
                 def: function () { return new Date(); },
-                format: 'YYYY-MM-DD hh:mm:ss',
+                format: 'YYYY-MM-DD',
             },
             {
-                label: '结束日期: ', name: 'end_date',
+                label: '修改日期: ', name: 'RMModifiedDate',
                 type: 'datetime',
-                format: 'YYYY-MM-DD hh:mm:ss',
+                def: function () { return new Date(); },
+                format: 'YYYY-MM-DD',
             },
-            { label: '门店名称: ', name: 'store_name', type:'select'},
-            { label: '级别名称: ', name: 'grid_name',type:'select' },
-
-
-            //价格调整-产品查询条件
+            { label: 'PO类型: ', name: 'POTypeDesc', type: 'readonly' },
+            { label: '收货状态: ', name: 'ReceptionStatus', type: 'readonly' },
+            { label: '供应商: ', name: 'SUName', type: 'readonly' },
+            { label: '用户: ', name: 'UserName', type:'readonly',def:SecurityManager.username},
+            { label: 'PO备注: ', name: 'POReference', type: 'readonly'},
+            {
+                label: '收货备注: ', name: 'Note', type: 'textarea', attr: {
+                    "maxlength": '200'
+                }
+            },
+            //产品查询条件
             { label: '产品代码: ', name: 'ProductCode' },
             { label: '产品名称: ', name: 'ProductName' },
             { label: '颜色组: ', name: 'ColorChart', type: 'select', placeholder: '未定义' },
@@ -52,19 +52,22 @@
             { label: '产品层级(四): ', name: 'Class', placeholder: '未定义' },
             { label: '零售价: ', name: 'RetailPrice' },
             { label: '成本价: ', name: 'CostPrice' },
-
         ],
+
+
+
+
         //自定义语言
         i18n: {
 
             "create": {
                 "button": '新增',
-                "title": '新增价格调整',
+                "title": '新增采购申请',
                 "submit": '提交'
             },
             "edit": {
                 "button": '修改',
-                "title": '价格调整管理',
+                "title": '采购申请单管理',
                 "submit": '提交'
             },
             "multi": {
@@ -80,17 +83,18 @@
             }
         }
     });
-    //价格调整主表
+    //主表
     var table;
     //产品明细调整编辑器
     var pceditor;
     //产品表
     var ptable;
-    //价格调整明细表
+    //产品调整明细表
     var pctable;
 
     var pcval = [];
 
+ 
     //初始化编辑器
     editor.on('open displayOrder', function (e, mode, action) {
         if (mode === 'main' && action !== 'remove') {
@@ -128,24 +132,29 @@
 
             });
 
-            //产品明细-价格调整
+            //产品明细-调整
             pceditor = new $.fn.dataTable.Editor({
-                idSrc: 'ProductCode',
-                table: '#PriceChangeTable',
+                idSrc: 'Line_Id',
+                table: '#ProductDetailTable',
                 fields: [
-                    { label: '序号: ', name: 'Sequence_number' },
-                    { label: '序号: ', name: 'Product_ID' },
-                    { label: '序号: ', name: 'ProductCode' },
-                    { label: '描述: ', name: 'ProductName' },
-                    { label: '类型: ', name: 'Color' },
-                    { label: '类型: ', name: 'Color_ID' },
-                    { label: '状态: ', name: 'Size' },
-                    { label: '类型: ', name: 'Size_ID' },
-                    { label: '状态: ', name: 'NewPrice' },
-                    { label: '状态: ', name: 'RetailPrice' },
-                    { label: '状态: ', name: 'LandedCost' },
-
+                    { name: 'Rm_number', type: 'hidden' },
+                    { name: 'Product_Id', type: 'hidden' },
+                    { name: 'Size_Id', type: 'hidden' },
+                    { name: 'Color_Id', type: 'hidden' },
+                    { name: 'Line_Id' },
+                    { name: 'Product_code' },
+                    { name: 'Short_name' },
+                    { name: 'Color_code' },
+                    { name: 'Size_code' },
+                    { name: 'OnHandQty' },
+                    { name: 'QtyOrdered' },
+                    { name: 'Loose_qty_rm' },
+                    { name: 'Unit_price' },
+                    { name: 'Price_retail' },
+                    { name: 'TotalAmount' },
                 ],
+
+
 
                 ajax: function (method, url, data, success, error) {
                     // NOTE - THIS WILL WORK FOR EDIT ONLY AS IS
@@ -154,32 +163,34 @@
                             data: $.map(data.data, function (val, key) {
                                 val.DT_RowId = key;
                                 var nval = {};
-                                nval.session_number = Number(editor.field('session_number').val());
-                                nval.sequence_number =Number(val.Sequence_number);
-                                nval.color_id = $.isNumeric(val.Color_ID) ? Number(val.Color_ID) : null;
-                                nval.product_id = Number(val.Product_ID);
-                                nval.size_id = $.isNumeric(val.Size_ID)?Number(val.Size_ID):null;
-                                nval.store_code_id = $.isNumeric(editor.field('store_name').val()) ? Number(editor.field('store_name').val()):null;
-                                nval.old_price = Number(val.RetailPrice);
-                                nval.new_price = Number(val.NewPrice);
-                                nval.Ledger = 'N';
-                                nval.Store_Grid_Id = $.isNumeric(editor.field('grid_name').val()) ? Number(editor.field('grid_name').val()) : null;
-                                nval.ExchangeRate = 0;
-                                nval.AvailableQuantity = null;
-
+                                nval.po_number = Number(editor.field('PONumber').val());
+                                nval.rm_number = val.Rm_number;
+                                nval.product_id = val.Product_Id;
+                                nval.color_id = val.Color_Id;
+                                nval.size_id = val.Size_Id;
+                                nval.qty = Number(val.Loose_qty_rm);
                                 if (pcval.length > 0) {
                                     for (x in pcval) {
                                         if (pcval[x].product_id === nval.product_id && pcval[x].color_id === nval.color_id && pcval[x].size_id === nval.size_id) {
-                                            pcval.splice(x, 1, nval);
+                                            if (nval.qty !== 0) {
+                                                pcval.splice(x, 1, nval);
+                                            } else {
+                                                pcval.splice(x, 1);
+                                            }
+
                                         } else if (pcval.length-1>0) {
                                             continue;
                                         } else {
-                                            pcval.push(nval);
+                                            if (nval.Qty !== 0) {
+                                                pcval.push(nval);
+                                            }
                                         }
                                     }
                                 }
-                                else{
-                                    pcval.push(nval);
+                                else {
+                                    if (nval.qty !== 0) {
+                                        pcval.push(nval);
+                                    }
                                 }
                                 console.log(pcval)
                                 pctable.draw();
@@ -190,23 +201,46 @@
                 }
 
             });
-            //初始化报表-价格调整明细
-            pctable = $("#PriceChangeTable").DataTable({
+            //初始化报表-产品调整明细
+            pctable = $("#ProductDetailTable").DataTable({
                 processing: true,
                 //dom: 'Bfrtip',
                 lengthChange: false,
                 select: false,
                 order: [[0, "asc"]],
                 columns: [
-                { "data": "Sequence_number" },
-                { "data": "ProductCode" },
-                { "data": "ProductName" },
-                { "data": "Color" },
-                { "data": "Size" },
-                { "data": "NewPrice", "defaultContent": "编辑价格", "className": 'editable' },
-                { "data": "RetailPrice" },
-                { "data": "LandedCost" },
+                { "data": "Line_Id" },
+                { "data": "Product_code" },
+                { "data": "Short_name" },
+                { "data": "Color_code" },
+                { "data": "Size_code" },
+                { "data": "OnHandQty" },
+                { "data": "QtyOrdered" },
+                {
+                    "data": function (row, type, val, meta) {
+                        if ((type === 'set' || type === 'display') && typeof (row.Loose_qty_rm) !== "undefined") {
+                            return row.Loose_qty_rm;
+                        }else{
+                            //row.Loose_qty_rm = '编辑数量'
+                            return row.Loose_qty_rm;
+                        }
+                    }, "className": 'editable'
+                },
+                { "data": "Unit_price" },
+                { "data": "Price_retail"},
+                {
+                    "data": function (row, type, val, meta) {
+                        if (type === 'set' || type === 'display') {
+                            row.TotalAmount = row.Loose_qty_rm * row.Unit_price;
+                            return row.TotalAmount;
+                        } else {
+                            row.TotalAmount = ''
+                            return row.TotalAmount;
+                        }
+                    }
+                },
                 ],
+
                 language: {
                     url: "../vendor/datatables/Chinese.json",
                     select: {
@@ -219,8 +253,9 @@
 
 
             });
-            $('#PriceChangeTable').on('click', 'tbody td.editable', function (e) {
-                pceditor.inline(this, {
+
+            $('#ProductDetailTable').on('click', 'tbody td.editable', function (e) {
+                pceditor.inline(this, 'Loose_qty_rm',{
                     onBlur: 'submit',
                     //onComplete:'none',
                     submit: 'all',
@@ -238,11 +273,119 @@
     //新增数据
     editor.on('initCreate', function (e, node, data) {
         //搜索条件下拉框
+        var exdata = [];
         var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
         var selectStore = [], selectPCGrid = [], selectDivision = [], selectDepartment = [], selectSubDepartment = [], selectClass = [];
-        var param = {};
-        param.token = SecurityManager.generate();
-        param.username = SecurityManager.username;
+        //var selectORType = [], selectORStatus = [], selectStore = [], selectPO_Types = [];
+        // Get existing options
+        if (table.rows('.selected', { select: true }).data().length > 0) {
+            var exdata = table.rows('.selected', { select: true }).data()[0];
+            //pctable.clear();
+            //for (var i = 0; i < plist.length; i++) {
+            //    plist[i].LineId = i + 1;
+            //    pctable.row.add(plist[i])
+                //console.log(index);
+            //}
+            //pctable.draw();
+            //$('a[href="#tab-4"]').tab('show');
+
+        }
+
+        editor.field("POUniqueId").val(exdata.POUniqueId)
+        editor.field("POTUniqueId").val(exdata.POTUniqueId)
+        editor.field("SUUniqueId").val(exdata.SUUniqueId)
+        editor.field("RecStoreUniqueId").val(exdata.RecStoreUniqueId)
+        editor.field("STUniqueId").val(exdata.STUniqueId)
+
+        editor.field("PONumber").val(exdata.PONumber)
+        editor.field("RecStore").val(exdata.RecStore)
+        editor.field("POTypeDesc").val(exdata.POTypeDesc)
+        editor.field("ReceptionStatus").val(exdata.ReceptionStatus)
+        editor.field("SUName").val(exdata.SUName)
+        editor.field("UserName").val(exdata.UserName)
+        editor.field("Supplier").update(selectSupplier)
+        editor.field("ColorChart").update(selectColorChart)
+        editor.field("SizeChart").update(selectSizeChart)
+        editor.field("ProductType").update(selectProductType)
+        editor.field("Season").update(selectSeason)
+        editor.enable();
+
+    });
+    //修改数据
+    editor.on('initEdit', function (e, node, data) {
+        //搜索条件下拉框
+        var exdata = [];
+        var detaildata = [];
+        var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
+        var selectStore = [], selectPOType = [], selectRecStore = [], selectSeason1 = [], selectSupplier1 = [];
+
+        // Get existing options
+        exdata = data
+        
+        if (exdata.POTypeDesc !== null) {
+            switch (exdata.POTypeDesc) {
+                case 'U': {
+                    exdata.POTypeDesc = '紧急';
+                    break;
+                }
+                case 'M': {
+                    exdata.POTypeDesc = '手工';
+                    break;
+                }
+                case 'G': {
+                    exdata.POTypeDesc = '全局';
+                    break;
+                }
+                case 'N': {
+                    exdata.POTypeDesc = '正常';
+                    break;
+                }
+                default: {
+                    exdata.POTypeDesc;
+                    break;
+                }
+            }
+        }
+        if (exdata.ReceptionStatus !== null) {
+            switch (exdata.ReceptionStatus) {
+                case 'L': {
+                    exdata.ReceptionStatus = '已关闭';
+                    editor.disable();
+                    break;
+                }
+                case 'C': {
+                    exdata.ReceptionStatus = '已确认';
+                    editor.disable();
+                    break;
+                }
+                case 'O': {
+                    exdata.ReceptionStatus = '待确认';
+                    editor.enable();
+                    break;
+                }
+                case 'CA': {
+                    exdata.ReceptionStatus = '已取消';
+                    editor.disable();
+                    break;
+                }
+                default: {
+                    exdata.ReceptionStatus;
+                    break;
+                }
+            }
+        }
+        editor.field("PONumber").val(exdata.PONumber)
+        editor.field("RecStore").val(exdata.RecStore)
+        editor.field("POTypeDesc").val(exdata.POTypeDesc)
+        editor.field("ReceptionStatus").val(exdata.ReceptionStatus)
+        editor.field("SUName").val(exdata.SUName)
+        editor.field("UserName").val(exdata.UserName)
+        editor.field("Supplier").update(selectSupplier)
+        editor.field("ColorChart").update(selectColorChart)
+        editor.field("SizeChart").update(selectSizeChart)
+        editor.field("ProductType").update(selectProductType)
+        editor.field("Season").update(selectSeason)
+        /**
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
             "type": "POST",
@@ -257,292 +400,103 @@
                     switch (data[item].table) {
                         case 'Supplier': {
                             selectSupplier.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                        case 'ColorChart': {
-                            selectColorChart.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                        case 'SizeChart': {
-                            selectSizeChart.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                        case 'ProductType': {
-                            selectProductType.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                        case 'Season': {
-                            selectSeason.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                    }
-                };
-                editor.field("Supplier").update(selectSupplier)
-                editor.field("ColorChart").update(selectColorChart)
-                editor.field("SizeChart").update(selectSizeChart)
-                editor.field("ProductType").update(selectProductType)
-                editor.field("Season").update(selectSeason)
-
-            }
-
-        });
-
-        $.ajax({
-            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
-            "type": "POST",
-            "async": true,
-            "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
-            "success": function (data) {
-                data = data.ResultSets[0]
-                for (var item in data) {
-                    switch (data[item].table) {
-                        case 'Store': {
-                            selectStore.push({ label: data[item].label, value: data[item].ext1 });
-                            break;
-                        }
-                        case 'PCGrid': {
-                            selectPCGrid.push({ label: data[item].label, value: data[item].ext1 });
-                            break;
-                        }
-                    }
-                };
-                //默认门店为空
-                selectStore.unshift({ label: '', value: '' });
-                editor.field("store_name").update(selectStore)
-                editor.field("grid_name").update(selectPCGrid)
-                editor.enable();
-                editor.disable(["session_number", "session_status"]);
-            }
-
-        });
-    });
-    //修改数据
-    editor.on('initEdit', function (e, node, data) {
-        //搜索条件下拉框
-        var exdata = [];
-        var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
-        var selectStore = [], selectPCGrid = [], selectDivision = [], selectDepartment = [], selectSubDepartment = [], selectClass = [];
-        var param = {};
-        param.token = SecurityManager.generate();
-        param.username = SecurityManager.username;
-        // Get existing options
-        exdata = data
-        $.ajax({
-            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
-            "type": "POST",
-            "async": true,
-            "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
-            "success": function (data) {
-                data = data.ResultSets[0]
-                for (var item in data) {
-                    switch (data[item].table) {
-                        case 'Supplier': {
-                                selectSupplier.push({ label: data[item].label, value: data[item].value });
-                                break;
-                            }
-                        case 'ColorChart': {
-                            selectColorChart.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                        case 'SizeChart': {
-                            selectSizeChart.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                        case 'ProductType': {
-                            selectProductType.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                        case 'Season': {
-                            selectSeason.push({ label: data[item].label, value: data[item].value });
-                            break;
-                        }
-                    }
-                };
-                editor.field("Supplier").update(selectSupplier)
-                editor.field("ColorChart").update(selectColorChart)
-                editor.field("SizeChart").update(selectSizeChart)
-                editor.field("ProductType").update(selectProductType)
-                editor.field("Season").update(selectSeason)
-
-            }
-
-        });
-
-        $.ajax({
-            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
-            "type": "POST",
-            "async": true,
-            "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
-            "success": function (data) {
-                data = data.ResultSets[0]
-                for (var item in data) {
-                    switch (data[item].table) {
-                        case 'Store': {
-                            if (data[item].label === exdata.store_name) {
-                                selectStore.unshift({ label: data[item].label, value: data[item].value });
-                                break;
-                            } else{
-                                selectStore.push({ label: data[item].label, value: data[item].value });
-                                break;
-                            }
-                        }
-                        case 'PCGrid': {
-                            if (data[item].label === exdata.grid_name) {
-                                selectPCGrid.unshift({ label: data[item].label, value: data[item].ext1 });
-                                break;
+                            if (exdata.SUName !== data[item].label) {
+                                selectSupplier1.push({ label: data[item].label, value: data[item].value });
                             } else {
-                                selectPCGrid.push({ label: data[item].label, value: data[item].ext1 });
-                                break;
+                                selectSupplier1.unshift({ label: exdata.SUName, value: exdata.SUUniqueId });
                             }
+                            break;
+                            }
+                        case 'ColorChart': {
+                            selectColorChart.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'SizeChart': {
+                            selectSizeChart.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'ProductType': {
+                            selectProductType.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'Season': {
+                            selectSeason.push({ label: data[item].label, value: data[item].value });
+                            if (exdata.Season !== data[item].label) {
+                                selectSeason1.push({ label: data[item].label, value: data[item].value });
+                            } else {
+                                selectSeason1.unshift({ label: exdata.Season, value: exdata.SeasonUniqueId });
+                            }
+                            break;
+                        }
+                        case 'Store': {
+                            if (exdata.Store !== data[item].label) {
+                                selectStore.push({ label: data[item].label, value: data[item].value });
+                            } else {
+                                selectStore.unshift({ label: exdata.Store, value: exdata.StoreUniqueId });
+                            }
+                            if (exdata.RecStore !== data[item].label) {
+                                selectRecStore.push({ label: data[item].label, value: data[item].value });
+                            } else {
+                                selectRecStore.unshift({ label: exdata.RecStore, value: exdata.RecStoreUniqueId });
+                            }
+                            break;
+                        }
+                        case 'PO_Types': {
+                            if (exdata.PTName !== data[item].label) {
+                                selectPOType.push({ label: data[item].label, value: data[item].value });
+                            } else {
+                                selectPOType.unshift({ label: exdata.PTName, value: exdata.PTUniqueId });
+                            }
+                            break;
                         }
                     }
                 };
-
-                if (exdata.store_name.length === 0) {
-                    selectStore.unshift({ label: exdata.store_name, value: '' });
-                    editor.field("store_name").update(selectStore)
-                } else {
-                    editor.field("store_name").update(selectStore)
-                };
-
-                editor.field("grid_name").update(selectPCGrid)
-                //Session_Type
-                for (var i = 0; i < editor.field("session_type").input()[0].length; i++) {
-                    if (editor.field("session_type").input()[0][i].text === exdata.session_type) {
-                        editor.field("session_type").val(editor.field("session_type").input()[0][i].value)
-                    }
-                }
-                //Session_Status
-                for (var i = 0; i < editor.field("session_status").input()[0].length; i++) {
-                    if (editor.field("session_status").input()[0][i].text === exdata.session_status) {
-                        editor.field("session_status").val(editor.field("session_status").input()[0][i].value)
-                    }
-                }
-                editor.field("start_date").val(exdata.start_date)
-                if (editor.field("session_status").val() === 2) {
-                    editor.disable();
-                    $("a#li-tab3,a#li-tab2").css("display", "none")
-                    $('#PriceChangeTable').off('click', 'tbody td.editable');
-                } else {
-                    editor.enable();
-                    editor.disable(["session_number", "session_status"]);
-                    $("a#li-tab3,a#li-tab2").css("display", "block");
-                }
+                editor.field("Supplier").update(selectSupplier)
+                editor.field("ColorChart").update(selectColorChart)
+                editor.field("SizeChart").update(selectSizeChart)
+                editor.field("ProductType").update(selectProductType)
+                editor.field("Season").update(selectSeason)
+                editor.field("SEName").update(selectSeason1)
+                editor.field("SUName").update(selectSupplier1)
+                editor.field("PTName").update(selectPOType)
+                editor.field("Store").update(selectStore)
+                editor.field("RecStore").update(selectRecStore)
+                editor.field("ORSCode").val(exdata.ORSCode)
             }
-            
         });
-        param.tbName = 'price_change_detail pcd ' +
-        'INNER JOIN [dbo].Price_Cost_Detail pcosd on pcd.product_id=pcosd.Product_id ' +
-        'INNER JOIN [dbo].product as prod on pcd.product_id=prod.Product_id ' +
-        'INNER JOIN [dbo].PRODUCT_NAME pron on pcd.product_id=pron.Product_ID ' +
-        'LEFT JOIN [dbo].color_sequence colse on pcd.Color_id=colse.color_id ' +
-        'LEFT JOIN [dbo].color col on colse.color_id= col.color_id ' +
-        'LEFT JOIN [dbo].size_sequence sizse on pcd.Size_id=sizse.size_id ' +
-        'LEFT JOIN [dbo].size siz on sizse.size_id=siz.size_id';
-        param.whName = 'session_number=' + exdata.session_number;
-        param.colName = 'Session_number, pcd.sequence_number as Sequence_number, pcd.product_id as Product_ID, prod.product_code as ProductCode, pron.Short_name as ProductName,col.description as Color,pcd.color_id as Color_ID, siz.description as Size, pcd.size_id as Size_ID, new_price as NewPrice, old_price as RetailPrice, pcosd.Landed_Cost as LandedCost';
+        **/
 
+        getproductdetail();
 
-        $.ajax({
-            "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
-            "type": "POST",
-            "async": true,
-            "crossDomain": true,
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": JSON.stringify(param),
-            "success": function (data) {
-                data = data.ResultSets[0]
-                pctable.clear().draw();//重置产品明细列表
-                data.forEach(function (node) {
-                    pctable.row.add(node);
-                })
-                pctable.draw();
-
-            }
-
-
-        });
     });
 
-    //初始化价格报表
-    table = $("#PriceTable").DataTable({
+    //初始化产品报表
+    table = $("#POTable").DataTable({
         processing: false,
         //dom: 'Bfrtip',
         lengthChange: false,
         select: true,
         order: [[0, "asc"]],
         columns: [
-        { "data": "session_number" },
-        { "data": "description" },
+        { "data": "Id"},
+        { "data": "PONumber" },
+        { "data": "POTypeDesc" },
+        { "data": "SUName" },
         {
-            "data": "session_type", "render": function (data, type, row) {
-                if (data !== null) {
-                    switch (data) {
-                        case 0:{
-                            return data = '调低价格';
-                            break;
-                        }
-                        case 1:{
-                            return data = '折扣';
-                            break;
-                        }
-                        case 2:{
-                            return data = '调高价格';
-                            break;
-                        }
-                        case 3:{
-                            return data = '初始化';
-                            break;
-                        }
-                        default: {
-                            return data;
-                            break;
-                        }
-                    }
+            "data": "POCreationDate", "render": function (data, type, row) {
+                if (data.length > 0) {
+                    return data.substring(0, 10);
                 }
             }
         },
-        {
-            "data": "session_status", "render": function (data, type, row) {
-                if (data !== null) {
-                    switch (data) {
-                        case 0: {
-                            return data = '编辑中';
-                            break;
-                        }
-                        case 1: {
-                            return data = '已取消';
-                            break;
-                        }
-                        case 2: {
-                            return data = '已审核';
-                            break;
-                        }
-                        default: {
-                            return data;
-                            break;
-                        }
-                    }
-                }
-            }
-        },
-        { "data": "start_date" },
-        { "data": "end_date" },
-        { "data": "store_name" },
-        { "data": "grid_name" },
+        { "data": "RecStore" },
+        { "data": "TotalQuantity" },
+        { "data": "TotalAmount" },
+        { "data": "POStatus" },
+        { "data": "ReceptionStatus" },
         ],
         ajax: {
-            "url": sysSettings.domainPath + "RaymSP_GatewaypaymentPriceGet",
+            "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_GetPOList",
             "async": true,
             "crossDomain": true,
             "type": "POST",
@@ -557,11 +511,39 @@
             },
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
+                for (var i = 0; i < data.length; i++) {
+                    data[i].Id = i + 1;
+                    switch (data[i].ReceptionStatus) {
+                        case 'N':{
+                            data[i].ReceptionStatus='待确认'
+                            break;
+                        }
+                        case 'C': {
+                            data[i].ReceptionStatus = '已确认'
+                            break;
+                        }
+                        case null: {
+                            data[i].ReceptionStatus = '待收货'
+                            break;
+                        }
+                    }
+
+                    switch (data[i].POStatus) {
+                        case 'N': {
+                            data[i].POStatus = '待确认'
+                            break;
+                        }
+                        case 'Confirmed': {
+                            data[i].POStatus = '已确认'
+                            break;
+                        }
+                    }
+                }
                 return data;
 
             }
         },
-        rowId:'session_number',
+        rowId:'Id',
         language: {
             url: "../vendor/datatables/Chinese.json",
             select: {
@@ -574,12 +556,20 @@
         //添加按键 编辑，打印及导出
 
         initComplete: function () {
-            table.buttons().container().appendTo('#PriceTable_wrapper .col-sm-6:eq(0)');
+            table.buttons().container().appendTo('#POTable_wrapper .col-sm-6:eq(0)');
 
         },
         buttons: [
-    { extend: 'create', editor: editor, text: '新建' },
-    { extend: 'edit', editor: editor, text: '修改' },
+    {
+        text: '新建', action: function (e, dt, node, config) {
+            editor.create();
+        }
+    },
+    {
+        text: '修改', action: function (e, dt, node, config) {
+            editor.edit(table.rows('.selected', { select: true }));
+        }
+    },
     { extend: 'print', text: '打印' },
     {
         extend: 'collection',
@@ -593,27 +583,47 @@
 
         ],
     });
+    //定义按键根据记录是否能新建或者修改
+
+    table.on('select', function (e,dt, type, indexes) {
+        if (type = 'row') {
+            var exdata = table.rows('.selected', { select: true }).data()[0];
+            if (exdata.ReceptionStatus === '待确认') {
+                table.button(0).disable();
+                table.button(1).enable();
+            } else if (exdata.ReceptionStatus === '待收货') {
+                table.button(0).enable();
+                table.button(1).disable();
+            } else {
+                table.buttons().disable();
+            }
+
+        }
+    })
+
+    //table.buttons('.edit').enable(table.rows({ selected: true }).data()[0].ReceptionStatus === '待确认' ? false : true);
+    //able.buttons('.create').enable(table.rows({ selected: true }).data()[0].ReceptionStatus === '待收货' ? false : true);
+
     //定义 Tab1 按键
     function tab1btn() {
         editor.buttons([
        {
            label: '保存', className: 'btn btn-primary', fn: function () {
-               if (editor.field('session_number').val().length > 0 && editor.field('session_status').val() === 2) {
+               if (editor.field('PONumber').val().length > 0 && (editor.field('ReceptionStatus').val() !== '待确认' && editor.field('ReceptionStatus').val() !== '待收货')) {
                    this.blur();
                } else {
                    var param = {};
                    param.token = SecurityManager.generate();
                    param.username = SecurityManager.username;
-                   param.session_number= editor.field('session_number').val(),
-                   param.description= editor.field('description').val(),
-                   param.session_type= editor.field('session_type').val(),
-                   param.session_status= editor.field('session_status').val(),
-                   param.start_date= editor.field('start_date').val(),
-                   param.end_date= editor.field('end_date').val(),
-                   param.store_name= editor.field('store_name').val(),
-                   param.grid_name= editor.field('grid_name').val()
+                   param.POUniqueId= editor.field('POUniqueId').val(),
+                   param.PONumber= editor.field('PONumber').val(),
+                   param.RMNumber= editor.field('RMNumber').val()? editor.field('RMNumber').val(): null,
+                   param.RecStoreUniqueId= editor.field('RecStoreUniqueId').val(),
+                   param.CreationDate= editor.field('RMCreationDate').val(),
+                   param.ModifiedDate = editor.field('RMModifiedDate').val()
+                   param.Note= editor.field('Note').val(),
                    $.ajax({
-                       "url": sysSettings.domainPath + "Gatewaypayment_Price_change_header",
+                       "url": sysSettings.domainPath + "raymsp_Gatewaypayment_RM_header",
                        "async": true,
                        "crossDomain": true,
                        "type": "POST",
@@ -622,9 +632,13 @@
                        "data": JSON.stringify(param),
                        "success": function (data) {
                            if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                               table.draw();
+                               table.ajax.reload().draw();
+                               getproductdetail();
+                               editor.field('RMNumber').val(data.ResultSets[0][0]["RMNumber"]);
+                               editor.field('RefRMNumber').val(data.ResultSets[0][0]["RefRMNumber"]);
+                               editor.field('ReceptionStatus').val('待确认');
                                editor.message('保存成功').true;
-                               return false;
+                               //return false;
                                //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
                                //table.row('#'+ data.ResultSets[0][0].session_number).remove();
                                //table.row.add(data.ResultSets[0][0]).draw();
@@ -642,13 +656,14 @@
     };
     //定义HTML Tab
     function addhtml() {
-        /** 创建 产品Tabs (搜索条件，列表及价格调整) **/
+        // 创建 产品Tabs (搜索条件，列表及产品调整明细) 
+
         var html = '<div class="tabs-container">' +
                     '<ul class="nav nav-tabs">' +
                         '<li class="active"><a data-toggle="tab" id="li-tab1" href="#tab-1">参数设置</a></li>' +
                         '<li class=""><a data-toggle="tab" id="li-tab2" href="#tab-2">产品搜索条件</a></li>' +
                         '<li class=""><a data-toggle="tab" id="li-tab3" href="#tab-3">产品列表</a></li>' +
-                        '<li class=""><a data-toggle="tab" id="li-tab4" href="#tab-4">产品价格调整</a></li>' +
+                        '<li class=""><a data-toggle="tab" id="li-tab4" href="#tab-4">收货明细管理</a></li>' +
                     '</ul>' +
                     '<div class="tab-content">' +
                         '<div id="tab-1" class="tab-pane active">' +
@@ -677,17 +692,20 @@
                         '</div>' +
                         '<div id="tab-4" class="tab-pane">' +
                             '<div class="panel-body tab-4">' +
-                            '<table style="width:100%" class="table table-striped table-bordered table-hover" id="PriceChangeTable">' +
+                            '<table style="width:100%" class="table table-striped table-bordered table-hover" id="ProductDetailTable">' +
                             '<thead>' +
                             '<tr>' +
                             '<th>序号</th>' +
                             '<th>产品代码</th>' +
                             '<th>产品名称</th>' +
-                            '<th>颜色代码</th>' +
-                            '<th>尺码代码</th>' +
-                            '<th>新价格</th>' +
-                            '<th>当前价格</th>' +
-                            '<th>成本</th>' +
+                            '<th>颜色</th>' +
+                            '<th>尺码</th>' +
+                            '<th>当前库存</th>' +
+                            '<th>订单数量</th>' +
+                            '<th>收货数量</th>' +
+                            '<th>成本价</th>' +
+                            '<th>零售价</th>' +
+                            '<th>总成本</th>' +
                             '</tr>' +
                             '</thead>' +
                             '</table>' +
@@ -702,12 +720,12 @@
         //$('div.panel-body.tab-1, div.panel-body.tab-2').addClass('product-column-body');
         $('div.DTE_Field').addClass('product-column-feild');
         $('div.DTE_Body.modal-body').css("padding", "0px");
-        $("a#li-tab3,a#li-tab2").css("display", "block");
+        $("a#li-tab3,a#li-tab2").css("display", "none");
         //add editer message form(layout) to header
         $('.DTE_Form_Info').css({"float":"right","margin":"10px"});
 
         ////move the editor elements to respective tab
-        $(editor.node(['session_number', 'description', 'session_type', 'session_status', 'start_date', 'end_date', 'store_name', 'grid_name'])).appendTo('.tab-1');
+        $(editor.node(['PONumber', 'RMNumber', 'RefRMNumber', 'RecStore', 'RMCreationDate', 'POTypeDesc', 'RMModifiedDate', 'ReceptionStatus', 'SUName', 'UserName', 'POReference', 'Note'])).appendTo('.tab-1');
         $(editor.node(['ProductCode', 'ProductName', 'ColorChart', 'SizeChart', 'Supplier', 'ProductType', 'Season', 'Division', 'Department', 'SubDepartment', 'Class', 'RetailPrice', 'CostPrice'])).appendTo('.tab-2');
 
 
@@ -726,7 +744,7 @@
                     }
                         //产品查询条件 Tab2
                     case 'li-tab2': {
-                        if (editor.field('session_number').val().length > 0) {
+                        if (editor.field('Code').val().length > 0) {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
@@ -761,7 +779,7 @@
                                         param.token = SecurityManager.generate();
                                         param.username = SecurityManager.username;
                                         param.tbName = 'V_Gatewaypayment_SearchProduct';
-                                        param.colName = 'Product_UniqueId, Product_ID, ProductCode, ProductName, Supplier, RetailPrice,LandedCost, Bin_Qty_Stocks, Color,Color_ID, Size, Size_ID';
+                                        param.colName = 'Product_UniqueId, Product_ID, ProductCode, ProductName, Supplier, RetailPrice,PurchasePrice, LandedCost, Bin_Qty_Stocks, Color,Color_ID,Color_UniqueId, Size, Size_ID, Size_UniqueId';
                                         param.whName = condition;
                                         $.ajax({
                                             "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
@@ -807,7 +825,7 @@
                     }
                         //产品列表 Tab3
                     case 'li-tab3': {
-                        if (editor.field("session_number").val().length > 0) {
+                        if (editor.field("Code").val().length > 0) {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
@@ -815,7 +833,7 @@
                                             var plist = ptable.rows('.selected', { select: true }).data();
                                             pctable.clear();
                                             for (var i = 0; i < plist.length; i++) {
-                                                plist[i].Sequence_number = i + 1;
+                                                plist[i].LineId = i + 1;
                                                 pctable.row.add(plist[i])
                                                 //console.log(index);
                                             }
@@ -844,14 +862,14 @@
                         editor.message('');
                         break;
                     }
-                        //产品价格调整 Tab 4
+                        //产品明细调整 Tab 4
                     case 'li-tab4': {
                         //$('.DTE_Form_Info').appendTo('#PriceChangeTable_wrapper .col-sm-6:eq(0)');
-                        if (editor.field("session_number").val().length>0 && editor.field("session_status").val() !== 2) {
+                        if (editor.field("RMNumber").val().length > 0 && editor.field('ReceptionStatus').val() === '待确认') {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '保存', className: 'pcbtn', fn: function () {
-                                        if (editor.field('session_number').val().length > 0 && editor.field('session_status').val() === 2) {
+                                        if (editor.field('RMNumber').val().length > 0 && editor.field('ReceptionStatus').val() !== '待确认') {
                                            return this.blur();
                                         }
                                         else if (pcval.length>0) {
@@ -860,7 +878,7 @@
                                             param.username = SecurityManager.username;
                                             param.PCD = pcval;
                                             $.ajax({
-                                                "url": sysSettings.domainPath + "Gatewaypayment_Price_change_detail",
+                                                "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_RM_detail",
                                                 "type": "POST",
                                                 "async": true,
                                                 "crossDomain": true,
@@ -876,11 +894,6 @@
                                                         })
                                                         pctable.draw();
                                                         editor.message('保存成功').true;
-                                                        //alert('保存成功');
-
-                                                        //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
-                                                        //table.row('#'+ data.ResultSets[0][0].session_number).remove();
-                                                        //table.row.add(data.ResultSets[0][0]).draw();
 
                                                     }
                                                 }
@@ -896,47 +909,48 @@
                                 {
                                     extend: 'tabbtn', label: '批准', className: 'pcbtn', fn: function () {
 
-                                            if (editor.field('session_number').val().length > 0 && editor.field('session_status').val() === 2) {
+                                        if (editor.field('RMNumber').val().length > 0 && editor.field('ReceptionStatus').val() !== '待确认') {
                                                 this.blur();
                                             } else {
-                                                var param = {};
-                                                param.token = SecurityManager.generate();
-                                                param.username = SecurityManager.username;
-                                                param.session_number = editor.field('session_number').val(),
-                                                param.description = editor.field('description').val(),
-                                                param.session_type = editor.field('session_type').val(),
-                                                param.session_status = 2,
-                                                param.approved_by = SecurityManager.username,
-                                                param.start_date= editor.field('start_date').val(),
-                                                param.end_date= editor.field('end_date').val(),
-                                                param.store_name= editor.field('store_name').val(),
-                                                param.grid_name= editor.field('grid_name').val()
-                                                $.ajax({
-                                                    "url": sysSettings.domainPath + "Gatewaypayment_Price_change_header",
-                                                    "async": true,
-                                                    "crossDomain": true,
-                                                    "type": "POST",
-                                                    "dataType": "json",
-                                                    "contentType": "application/json; charset=utf-8",
-                                                    "data": JSON.stringify(param),
-                                                    "success": function (data) {
-                                                        if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                                                            editor.field('session_status').val(2);
+                                            var param = {};
+                                            param.token = SecurityManager.generate();
+                                            param.username = SecurityManager.username;
+                                            param.POUniqueId = editor.field('POUniqueId').val(),
+                                            param.PONumber = editor.field('PONumber').val(),
+                                            param.RMNumber = editor.field('RMNumber').val(),
+                                            param.RecStoreUniqueId = editor.field('RecStoreUniqueId').val(),
+                                            param.CreationDate = editor.field('RMCreationDate').val(),
+                                            param.ModifiedDate = editor.field('RMModifiedDate').val(),
+                                            param.ReceptionStatus='C',//确认收货
+                                            $.ajax({
+                                                "url": sysSettings.domainPath + "raymsp_Gatewaypayment_RM_header",
+                                                "async": true,
+                                                "crossDomain": true,
+                                                "type": "POST",
+                                                "dataType": "json",
+                                                "contentType": "application/json; charset=utf-8",
+                                                "data": JSON.stringify(param),
+                                                "success": function (data) {
+                                                    if (typeof (data.ResultSets[1][0]) !== 'undefined') {
+                                                        if(data.ResultSets[1][0].ReceptionStatus==='C'){
+                                                            editor.field('ReceptionStatus').val('已关闭');
                                                             editor.disable();
-                                                            $("a#li-tab3,a#li-tab2").css("display", "none")
-                                                            $('#PriceChangeTable').off('click', 'tbody td.editable');
+                                                            $('#ProductDetailTable').off('click', 'tbody td.editable');
                                                             table.ajax.reload();
                                                             table.draw();
                                                             $('a[href="#tab-1"]').tab('show');
                                                             editor.message('审批成功').true;
                                                             return false;
-                                                            //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
-                                                            //table.row('#'+ data.ResultSets[0][0].session_number).remove();
-                                                            //table.row.add(data.ResultSets[0][0]).draw();
 
                                                         }
+
                                                     }
-                                                })
+                                                }
+                                            })
+
+                                               
+
+                                                
 
                                             }
 
@@ -951,6 +965,72 @@
             }
         })
     };
+
+    function getproductdetail() {
+
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
+        param.ponumber = editor.field("PONumber").val();
+
+        $.ajax({
+            "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_GetRmListByAdvancedSearch",
+            "type": "POST",
+            "async": true,
+            "crossDomain": true,
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
+            "success": function (data) {
+                detaildata = data.ResultSets[0]
+
+                /**
+                for (var i = 0; i < detaildata.length; i++) {
+                    param.Product_Id = detaildata[i].Product_Id
+                    param.Color_Id = Number(detaildata[i].Color_Id)
+                    param.Size_Id = Number(detaildata[i].Size_Id)
+                    param.Store_Code_Id = 0
+                    param.Store_Grid_Id = 0
+                    param.Period_Date = 'LIFE'
+                    $.ajax({
+                        "url": sysSettings.domainPath + "rmSP_RAMS_GetProductSellThruByProduct",
+                        "type": "POST",
+                        "async": false,
+                        "crossDomain": true,
+                        "dataType": "json",
+                        "contentType": "application/json; charset=utf-8",
+                        "data": JSON.stringify(param),
+                        "success": function (data) {
+                            detaildata[i].OnHandQty = data.ResultSets[0][0].OnHandQty
+                            detaildata[i].Qty = data.ResultSets[0][0].QtyOrdered
+
+                        }
+
+                    });
+
+                }
+                **/
+                pctable.clear().draw();//重置产品明细列表
+                detaildata.forEach(function (node) {
+                    pctable.row.add(node);
+                })
+                pctable.draw();
+
+                //if (editor.field("ORSCode").val() === "O" || editor.field("ORSCode").val() === "待确认") {
+                //    editor.enable();
+                //    $("a#li-tab3,a#li-tab2").css("display", "block");
+                //} else {
+                //    editor.disable();
+                //    $("a#li-tab3,a#li-tab2").css("display", "none")
+                //    $('#PriceChangeTable').off('click', 'tbody td.editable');
+                //}
+
+            }
+
+
+        });
+    }
+
 });
 
 

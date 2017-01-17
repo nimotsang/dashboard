@@ -1,4 +1,4 @@
-/*! DataTables Editor v1.6.0
+/*! DataTables Editor v1.6.1
  *
  * ©2012-2016 SpryMedia Ltd, all rights reserved.
  * License: editor.datatables.net/license
@@ -7,7 +7,7 @@
 /**
  * @summary     DataTables Editor
  * @description Table editing library for DataTables
- * @version     1.6.0
+ * @version     1.6.1
  * @file        dataTables.editor.js
  * @author      SpryMedia Ltd
  * @contact     www.datatables.net/contact
@@ -4260,12 +4260,20 @@ Editor.prototype._ajax = function ( data, success, error )
 			// Use `complete` rather than `success` so that all status codes are
 			// caught and can return valid JSON (useful when working with REST
 			// services).
-			var json = xhr.status === 204 ?
-				{} :
-				xhr.responseJSON;
+			var json = null;
+
+			if ( xhr.status === 204 ) {
+				json = {};
+			}
+			else {
+				try {
+					json = $.parseJSON( xhr.responseText );
+				}
+				catch (e) {}
+			}
 
 			if ( $.isPlainObject( json ) ) {
-				success( json );
+				success( json, xhr.status >= 400 );
 			}
 			else {
 				error( xhr, text, thrown );
@@ -5379,9 +5387,9 @@ Editor.prototype._submit = function ( successCallback, errorCallback, formatdata
 	submitWire.call(
 		this,
 		submitParams,
-		function (json) {
+		function (json, notGood) {
 			that._submitSuccess(
-				json, submitParams, submitParamsLocal, action,
+				json, notGood, submitParams, submitParamsLocal, action,
 				editCount, hide, successCallback, errorCallback
 			);
 		},
@@ -5411,11 +5419,13 @@ Editor.prototype._submitTable = function ( data, success, error )
 
 	// Nothing required for remove - create and edit get a copy of the data
 	if ( action !== 'remove' ) {
-		$.each( data.data, function ( key, val ) {
+		var originalData = this._dataSource( 'fields', this.modifier() );
+
+		$.each( data.data, function ( key, vals ) {
 			// Get the original row's data, so we can modify it with new values.
 			// This allows Editor to not need to submit all fields
-			var rowData = that._dataSource( 'fields', '#'+key )[ key ].data;
-			var toSave = $.extend( true, {}, rowData, val );
+			var rowData = originalData[ key ].data;
+			var toSave = $.extend( true, {}, rowData, vals );
 
 			// Create a new id for `create` and use the existing one for edit
 			idSet( toSave, action === 'create' ?
@@ -5427,15 +5437,30 @@ Editor.prototype._submitTable = function ( data, success, error )
 		} );
 	}
 
+
 	success( out );
 };
 
 
 /**
  * Submit success callback function
+ * @param  {object} json                Payload
+ * @param  {bool} notGood               True if the returned status code was
+ *   >=400 (i.e. processing failed). This is called `notGood` rather than
+ *   `success` since the request was successfully processed, just not written to
+ *   the db. It is also inverted from "good" to make it optional when overriding
+ *   the `ajax` function.
+ * @param  {object} submitParams        Submitted data
+ * @param  {object} submitParamsLocal   Unmodified copy of submitted data
+ *   (before it could be modified by the user)
+ * @param  {string} action              CRUD action being taken
+ * @param  {int} editCount              Protection against async errors
+ * @param  {bool} hide                  Hide the form flag
+ * @param  {function} successCallback   Success callback
+ * @param  {function} errorCallback     Error callback
  * @private
  */
-Editor.prototype._submitSuccess = function ( json, submitParams, submitParamsLocal, action, editCount, hide, successCallback, errorCallback )
+Editor.prototype._submitSuccess = function ( json, notGood, submitParams, submitParamsLocal, action, editCount, hide, successCallback, errorCallback )
 {
 	var that = this;
 	var setData;
@@ -5453,7 +5478,7 @@ Editor.prototype._submitSuccess = function ( json, submitParams, submitParamsLoc
 		json.fieldErrors = [];
 	}
 
-	if ( json.error || json.fieldErrors.length ) {
+	if ( notGood || json.error || json.fieldErrors.length ) {
 		// Global form error
 		this.error( json.error );
 
@@ -5486,9 +5511,10 @@ Editor.prototype._submitSuccess = function ( json, submitParams, submitParamsLoc
 		// Create a data store that the data source can use, which is
 		// unique to this action
 		var store = {};
-		this._dataSource( 'prep', action, modifier, submitParamsLocal, json, store );
 
-		if ( action === "create"  || action === "edit" ) {
+		if ( json.data && (action === "create"  || action === "edit") ) {
+			this._dataSource( 'prep', action, modifier, submitParamsLocal, json, store );
+
 			for ( var i=0 ; i<json.data.length ; i++ ) {
 				setData = json.data[ i ];
 				this._event( 'setData', [json, setData, action] ); // legacy
@@ -5506,22 +5532,27 @@ Editor.prototype._submitSuccess = function ( json, submitParams, submitParamsLoc
 					this._event( ['edit', 'postEdit'], [json, setData] );
 				}
 			}
+
+			this._dataSource( 'commit', action, modifier, json.data, store );
 		}
 		else if ( action === "remove" ) {
+			this._dataSource( 'prep', action, modifier, submitParamsLocal, json, store );
+
 			// Remove the rows given and then redraw the table
 			this._event( 'preRemove', [json] );
 			this._dataSource( 'remove', modifier, fields, store );
 			this._event( ['remove', 'postRemove'], [json] );
-		}
 
-		this._dataSource( 'commit', action, modifier, json.data, store );
+			this._dataSource( 'commit', action, modifier, json.data, store );
+		}
 
 		// Submission complete
 		if ( editCount === this.s.editCount ) {
 			this.s.action = null;
 
 			if ( opts.onComplete === 'close' && (hide === undefined || hide) ) {
-				this._close( true );
+				// If no data returned, then treat as not complete
+				this._close( json.data ? true : false );
 			}
 			else if ( typeof opts.onComplete === 'function' ) {
 				opts.onComplete( this );
@@ -8073,12 +8104,14 @@ $.extend( Editor.DateTime.prototype, {
 	 * @private
 	 */
 	_setCalander: function () {
-		this.dom.calendar
-			.empty()
-			.append( this._htmlMonth(
-				this.s.display.getUTCFullYear(),
-				this.s.display.getUTCMonth()
-			) );
+		if ( this.s.display ) {
+			this.dom.calendar
+				.empty()
+				.append( this._htmlMonth(
+					this.s.display.getUTCFullYear(),
+					this.s.display.getUTCMonth()
+				) );
+		}
 	},
 
 	/**
@@ -8447,6 +8480,10 @@ fieldTypes.textarea = $.extend( true, {}, baseFieldType, {
 			id: Editor.safeId( conf.id )
 		}, conf.attr || {} ) );
 		return conf._input[0];
+	},
+
+	canReturnSubmit: function ( conf, node ) {
+		return false;
 	}
 } );
 
@@ -9084,7 +9121,7 @@ Editor.prototype.CLASS = "Editor";
  *  @default   See code
  *  @static
  */
-Editor.version = "1.6.0";
+Editor.version = "1.6.1";
 
 
 // Event documentation for JSDoc
