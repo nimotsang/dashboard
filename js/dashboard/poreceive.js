@@ -171,7 +171,13 @@
                                 nval.qty = Number(val.Loose_qty_rm);
                                 if (pcval.length > 0) {
                                     for (x in pcval) {
-                                        if (pcval[x].product_id === nval.product_id && pcval[x].color_id === nval.color_id && pcval[x].size_id === nval.size_id) {
+
+                                        if (pcval[x].po_number !== nval.po_number) {
+                                            pcval = [];
+                                            pcval.push(nval);
+                                            break;
+                                        }
+                                        else if (pcval[x].product_id === nval.product_id && pcval[x].color_id === nval.color_id && pcval[x].size_id === nval.size_id) {
                                             if (nval.qty !== 0) {
                                                 pcval.splice(x, 1, nval);
                                             } else {
@@ -255,13 +261,17 @@
             });
 
             $('#ProductDetailTable').on('click', 'tbody td.editable', function (e) {
-                pceditor.inline(this, 'Loose_qty_rm',{
-                    onBlur: 'submit',
-                    //onComplete:'none',
-                    submit: 'all',
-                    //onReturn: 'none',
-                    onBackground: close
-                });
+                if (editor.field("ReceptionStatus").val() === '待确认') {
+                    pceditor.inline(this, 'Loose_qty_rm', {
+                        onBlur: 'submit',
+                        //onComplete:'none',
+                        submit: 'all',
+                        //onReturn: 'none',
+                        onBackground: close
+                    });
+                } else {
+                    $('#ProductDetailTable').off('click', 'tbody td.editable');
+                };
             });
 
 
@@ -471,7 +481,7 @@
     });
 
     //初始化产品报表
-    table = $("#POTable").DataTable({
+    var table = $("#POTable").DataTable({
         processing: false,
         //dom: 'Bfrtip',
         lengthChange: false,
@@ -495,54 +505,6 @@
         { "data": "POStatus" },
         { "data": "ReceptionStatus" },
         ],
-        ajax: {
-            "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_GetPOList",
-            "async": true,
-            "crossDomain": true,
-            "type": "POST",
-            "dataType": "json",
-            "contentType": "application/json; charset=utf-8",
-            "data": function () {
-                var param = {
-                    "token": SecurityManager.generate(),
-                    "username": SecurityManager.username,
-                }
-                return JSON.stringify(param);
-            },
-            "dataSrc": function (data) {
-                data = data.ResultSets[0]
-                for (var i = 0; i < data.length; i++) {
-                    data[i].Id = i + 1;
-                    switch (data[i].ReceptionStatus) {
-                        case 'N':{
-                            data[i].ReceptionStatus='待确认'
-                            break;
-                        }
-                        case 'C': {
-                            data[i].ReceptionStatus = '已确认'
-                            break;
-                        }
-                        case null: {
-                            data[i].ReceptionStatus = '待收货'
-                            break;
-                        }
-                    }
-
-                    switch (data[i].POStatus) {
-                        case 'N': {
-                            data[i].POStatus = '待确认'
-                            break;
-                        }
-                        case 'Confirmed': {
-                            data[i].POStatus = '已确认'
-                            break;
-                        }
-                    }
-                }
-                return data;
-
-            }
-        },
         rowId:'Id',
         language: {
             url: "../vendor/datatables/Chinese.json",
@@ -557,6 +519,7 @@
 
         initComplete: function () {
             table.buttons().container().appendTo('#POTable_wrapper .col-sm-6:eq(0)');
+            getpolist('O');
 
         },
         buttons: [
@@ -570,6 +533,7 @@
             editor.edit(table.rows('.selected', { select: true }));
         }
     },
+
     { extend: 'print', text: '打印' },
     {
         extend: 'collection',
@@ -578,8 +542,23 @@
             'excel',
             'csv'
         ]
-    }
-
+    },
+    {
+        extend: 'collection',
+        text: '收货状态..',
+        buttons: [
+                {
+                    text: '已确认', action: function (e, dt, node, config) {
+                        getpolist('C');
+                    }
+                },
+                {
+                    text: '待确认', action: function (e, dt, node, config) {
+                        getpolist('O');
+                    }
+                }
+        ]
+    },
 
         ],
     });
@@ -588,21 +567,21 @@
     table.on('select', function (e,dt, type, indexes) {
         if (type = 'row') {
             var exdata = table.rows('.selected', { select: true }).data()[0];
-            if (exdata.ReceptionStatus === '待确认') {
-                table.button(0).disable();
-                table.button(1).enable();
-            } else if (exdata.ReceptionStatus === '待收货') {
+            if (exdata.ReceptionStatus === '待收货') {
                 table.button(0).enable();
-                table.button(1).disable();
+                table.button(1).text('修改').disable();
+            } else if (exdata.ReceptionStatus === '待确认') {
+                table.button(0).disable();
+                table.button(1).text('修改').enable();
             } else {
-                table.buttons().disable();
+                table.button(0).disable();
+                table.button(1).text('查看').enable();
+
             }
 
         }
     })
 
-    //table.buttons('.edit').enable(table.rows({ selected: true }).data()[0].ReceptionStatus === '待确认' ? false : true);
-    //able.buttons('.create').enable(table.rows({ selected: true }).data()[0].ReceptionStatus === '待收货' ? false : true);
 
     //定义 Tab1 按键
     function tab1btn() {
@@ -632,7 +611,7 @@
                        "data": JSON.stringify(param),
                        "success": function (data) {
                            if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                               table.ajax.reload().draw();
+                               getpolist('O');
                                getproductdetail();
                                editor.field('RMNumber').val(data.ResultSets[0][0]["RMNumber"]);
                                editor.field('RefRMNumber').val(data.ResultSets[0][0]["RefRMNumber"]);
@@ -900,7 +879,7 @@
                                             })
                                         }
                                         else {
-                                            editor.message('没有需要保存的数据').true;
+                                            editor.message('没有修改的数据需要保存').true;
 
                                         }
 
@@ -933,11 +912,10 @@
                                                 "success": function (data) {
                                                     if (typeof (data.ResultSets[1][0]) !== 'undefined') {
                                                         if(data.ResultSets[1][0].ReceptionStatus==='C'){
-                                                            editor.field('ReceptionStatus').val('已关闭');
+                                                            editor.field('ReceptionStatus').val('已确认');
                                                             editor.disable();
                                                             $('#ProductDetailTable').off('click', 'tbody td.editable');
-                                                            table.ajax.reload();
-                                                            table.draw();
+                                                            getpolist('O');
                                                             $('a[href="#tab-1"]').tab('show');
                                                             editor.message('审批成功').true;
                                                             return false;
@@ -1030,7 +1008,71 @@
 
         });
     }
+    function getpolist(status) {
+        var param = {
+            "token": SecurityManager.generate(),
+            "username": SecurityManager.username,
+            "status":status,                
+        }
+        if (status === 'C') {
+            table.button(1).text('查看');
+            editor.disable();
+        } else {
+            table.button(1).text('修改');
+            editor.enable();
+        }
+        $.ajax({
+            "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_GetPOList",
+            "async": true,
+            "crossDomain": true,
+            "type": "POST",
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
+            "success": function (data) {
+                data = data.ResultSets[0]
+                for (var i = 0; i < data.length; i++) {
+                    data[i].Id = i + 1;
+                    switch (data[i].ReceptionStatus) {
+                        case 'N':{
+                            data[i].ReceptionStatus='待确认'
+                            break;
+                        }
+                        case 'C': {
+                            data[i].ReceptionStatus = '已确认'
+                            break;
+                        }
+                        case null: {
+                            data[i].ReceptionStatus = '待收货'
+                            break;
+                        }
+                    }
 
+                    switch (data[i].POStatus) {
+                        case 'N': {
+                            data[i].POStatus = '待确认'
+                            break;
+                        }
+                        case 'Confirmed': {
+                            data[i].POStatus = '已确认'
+                            break;
+                        }
+                        case 'Closed': {
+                            data[i].POStatus = '已关闭'
+                            break;
+                        }
+                    }
+                }
+                table.clear();
+                data.forEach(function (node) {
+                    table.row.add(node);
+                })
+                table.draw();
+                //return data;
+            }
+        })
+
+    }
 });
 
 
