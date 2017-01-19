@@ -4,7 +4,7 @@
         ajax: {
 
             "edit": {
-                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentAccount",
+                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentAccount",
                 "async": true,
                 "crossDomain": true,
                 "type": "POST",
@@ -27,7 +27,8 @@
                 }
             },
             "create": {
-                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentAccount",
+
+                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentAccount",
                 "async": true,
                 "crossDomain": true,
                 "type": "POST",
@@ -130,7 +131,7 @@
         }
 
         $.ajax({
-            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
+            "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant_Get',
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -172,7 +173,7 @@
 
 
         $.ajax({
-            "url": sysSettings.domainPath+"RaymSP_GatewayPaymentMerchant_Get",
+            "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant_Get',
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -257,7 +258,7 @@
             "async": true,
             "crossDomain": true,
             "type": "POST",
-            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentAccount",
+            "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentAccount",
             "data": {
                     "token": SecurityManager.generate(),
                     "username": SecurityManager.username
@@ -271,7 +272,7 @@
         },
 
         language: {
-            url: "../vendor/datatables/Chinese.json",
+            url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
             select: {
                 rows: {
                     _: "已选中 %d 行",

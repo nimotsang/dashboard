@@ -4,7 +4,7 @@
         ajax: {
 
             "edit": {
-                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStorePaymentMethod",
+                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentStorePaymentMethod",
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
@@ -23,7 +23,7 @@
                 }
             },
             "create": {
-                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStorePaymentMethod",
+                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentStorePaymentMethod",
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
@@ -92,7 +92,7 @@
         var result;
         if (action === "edit" && PaymentMethodDefault.val()) {
            $.ajax({
-               "url": sysSettings.domainPath + "RaymSP_GatewayPaymentDefaultMethodCheck",
+                "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentDefaultMethodCheck',
                 "type": "POST",
                 "async": false,
                 "crossDomain": true,
@@ -160,7 +160,7 @@
 
 
             $.ajax({
-                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
+                "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant_Get',
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
@@ -205,7 +205,7 @@
     storeaccounteditor.on('initCreate', function () {
         var selectMerchant = [], selectStore = [], selectMethodTypeJoin = [];
         $.ajax({
-            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
+            "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant_Get',
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -291,7 +291,7 @@
             { "width": "20%", "targets": 1 }
         ],
         ajax: {
-            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStorePaymentMethod",
+            "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentStorePaymentMethod",
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -308,7 +308,7 @@
         },
 
          language: {
-             url: "../vendor/datatables/Chinese.json",
+             url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
              select:{
                  rows:{
                      _: "已选中 %d 行",

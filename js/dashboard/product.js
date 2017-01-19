@@ -4,7 +4,7 @@
         ajax: {
 
             "edit": {
-                "url": sysSettings.domainPath + "Raymsp_Product_Generate",
+                "url": "https://mbeta.pw/mocdbapi/Raymsp_Product_Generate",
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
@@ -22,7 +22,7 @@
             },
             "create": {
 
-                "url": sysSettings.domainPath + "Raymsp_Product_Generate",
+                "url": "https://mbeta.pw/mocdbapi/Raymsp_Product_Generate",
                 "type": "POST",
                 "data": function () {
                     var param = {
@@ -88,8 +88,8 @@
         if (!price.isMultiValue()) {
             if (!price.val()) {
                 price.error("价格不能为空，请重新输入");
-            } else if (!checkprice(price.val())) {
-                price.error("价格格式不正确，请重新输入");
+            } else if (!checkcode(price.val())) {
+                price.error("价格只能是字母和数字，请重新输入");
                     }
                 }
         if (!Long_name.isMultiValue()) {
@@ -136,7 +136,7 @@
             { "width": "20%", "targets": 0 }
         ], **/
         ajax: {
-            "url": sysSettings.domainPath + "Raymsp_FindProduct_Page",
+            "url": "https://mbeta.pw/mocdbapi/Raymsp_FindProduct_Page",
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -153,7 +153,7 @@
         },
 
         language: {
-            url: "../vendor/datatables/Chinese.json",
+            url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
             select: {
                 rows: {
                     _: "已选中 %d 行",
