@@ -4,10 +4,12 @@
         ajax: {
 
             "edit": {
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant",
-                "type": "POST",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -16,15 +18,17 @@
                         "MerchantCode": editor.field('MerchantCode').val(),
                         "MerchantName": editor.field('MerchantName').val()
                     }
-                    return param
+                    return JSON.stringify(param);
                 }
             },
             "create": {
 
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant",
-                "type": "POST",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -33,7 +37,7 @@
                         "MerchantCode": editor.field('MerchantCode').val(),
                         "MerchantName": editor.field('MerchantName').val()
                     }
-                    return param
+                    return JSON.stringify(param);
                 }
             }
 
@@ -92,13 +96,18 @@
             {"width":"20%","targets":0}
         ],
         ajax:{
-            "type": "POST",
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant",
             "async": true,
             "crossDomain": true,
-            "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant",
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
+            "type": "POST",
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
             },
             "dataType": "json",
             "dataSrc":function (data) {
@@ -109,7 +118,7 @@
         },
 
          language: {
-             url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
+             url: "../vendor/datatables/Chinese.json",
              select:{
                  rows:{
                      _: "已选中 %d 行",

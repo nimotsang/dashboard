@@ -21,6 +21,7 @@
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
 
     <!-- Custom Fonts -->
+    <link href="../dist/css/main.css" rel="stylesheet">
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -33,7 +34,7 @@
 
 <body>
 
-    <div class="container">
+    <div class="container" id="login">
         <div class="row">
             <div class="col-md-4 col-md-offset-4">
                 <div class="login-panel panel panel-default">
@@ -44,10 +45,10 @@
                         <form role="form">
                             <fieldset>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="用户名" id="username" name="username"  autofocus>
+                                    <input class="form-control" placeholder="用户名" id="username" name="username" autofocus>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="密码" id="password" name="password" type="password" value="" onkeypress="if (event.keyCode == 13) { submit.click(); return false; }">
+                                    <input class="form-control" placeholder="密码" id="password" name="password" type="password" value="" onkeypress="if (event.keyCode == 13) {submit.click(); return false; }">
                                 </div>
                                 <div class="checkbox">
                                     <label>
@@ -77,10 +78,11 @@
     <script src="../dist/js/sb-admin-2.js"></script>
 
     <!-- DMS JavaScript -->
+    <script src="../js/common/sysSettings.js"></script>
     <script src="../js/script.js"></script>
     <script src="../js/security.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/hmac-sha256.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/enc-base64.js"></script>
+    <script src="../js/common/hmac-sha256.js"></script>
+    <script src="../js/common/enc-base64.js"></script>
 
 </body>
 

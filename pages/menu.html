@@ -1,15 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>支付网关管理系统后台beta</title>
+ <head>
 
     <!-- Bootstrap Core CSS -->
     <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -19,8 +10,9 @@
 
     <!-- Custom CSS -->
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
-    
+        
     <!-- Custom Fonts -->
+    <link href="../dist/css/main.css" rel="stylesheet">
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
     <!-- DataTables CSS -->
@@ -29,9 +21,10 @@
     <!-- DataTables Extensions CSS -->
     <link href="../vendor/datatables-button/css/buttons.bootstrap.min.css" rel="stylesheet">
     <link href="../vendor/datatables-select/css/select.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendor/datatables-keytable/css/keyTable.bootstrap.min.css" rel="stylesheet">
 
     <!-- DataTables Editor CSS -->
-    <link href="../vendor/datatables-editor/css/editor.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendor/datatables-editor/css/editor.bootstrap.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -100,7 +93,7 @@
                             <a href="index.html"><i class="fa fa-dashboard fa-fw"></i> 仪表盘</a>
                         </li>
                         <li>
-                            <a href="#"><i class="fa fa-users fa-fw"></i> 商户管理<span class="fa arrow"></span></a>
+                            <a href="#"><i class="fa fa-user fa-fw"></i> 商户管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="merchant.html">商户信息</a>
@@ -117,15 +110,69 @@
                             <a href="#"><i class="fa fa-tags fa-fw"></i> 商品管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
-                                    <a href="product.html">产品管理</a>
+                                    <a href="product.html">产品管理<span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+                                        <li>
+                                            <a href="product.html">产品管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="product2.html">产品管理2</a>
+                                        </li>
+                                        <li>
+                                            <a href="price.html">价格管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="sku.html">SKU管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="status.html">状态管理</a>
+                                        </li>
+                                    </ul>
+                                    <!-- /.nav-third-level -->
                                 </li>
                                 <li>
-                                    <a href="vendor.html">供应商管理</a>
+                                    <a href="supplier.html">供应商管理</a>
                                 </li>
                                 <li>
                                     <a href="hierarchy.html">产品层级管理</a>
                                 </li>
                             </ul>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-database fa-fw"></i> 库存管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="po.html">采购管理</a>
+                                </li>
+                                <li>
+                                    <a href="poreceive.html">收货管理</a>
+                                </li>
+                                <li>
+                                    <a href="storeaccount.html">调拨管理</a>
+                                </li>
+                                <li>
+                                    <a href="storeaccount.html">调整管理</a>
+                                </li>
+                                <li>
+                                    <a href="storeaccount.html">盘点管理</a>
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-wechat fa-fw"></i> 会员管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="account.html">会员管理</a>
+                                </li>
+                                <li>
+                                    <a href="storeaccount.html">会员级别</a>
+                                </li>
+                                <li>
+                                    <a href="storeaccount.html">积分级别</a>
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
                         </li>
                         <li>
                             <a href="#"><i class="fa fa-money fa-fw"></i> 支付管理<span class="fa arrow"></span></a>
@@ -140,18 +187,61 @@
                             <!-- /.nav-second-level -->
                         </li>
                         <li>
-                            <a href="#"><i class="fa fa-bank fa-fw"></i> 订单管理<span class="fa arrow"></span></a>
+                            <a href="#"><i class="fa fa-file-text fa-fw"></i> 订单管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="Orders.html">订单状态管理</a>
                                 </li>
+                                <li>
+                                    <a href="refund.html">退款申请管理</a>
+                                </li>
                             </ul>
                         </li>
                         <li>
-                            <a href="#"><i class="fa fa-check-circle fa-fw"></i> 对账管理<span class="fa arrow"></span></a>
+                            <a href="#"><i class="fa fa-jsfiddle fa-fw"></i> 对账管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="checking.html">对账记录管理</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-stack-overflow fa-fw"></i> 结算管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="settlement.html">结算查询</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> 报表管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="#">销售报表<span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+                                        <li>
+                                            <a href="#">产品管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="#">产品管理2</a>
+                                        </li>
+                                        <li>
+                                            <a href="#">价格管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="#">SKU管理</a>
+                                        </li>
+                                        <li>
+                                            <a href="#">状态管理</a>
+                                        </li>
+                                    </ul>
+                                    <!-- /.nav-third-level -->
+                                </li>
+                                <li>
+                                    <a href="#">库存报表</a>
+                                </li>
+                                <li>
+                                    <a href="#">产品报表</a>
                                 </li>
                             </ul>
                         </li>
@@ -175,30 +265,32 @@
     <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
     <!-- Metis Menu Plugin JavaScript -->
     <script src="../vendor/metisMenu/metisMenu.min.js"></script>
-
     <!-- Custom Theme JavaScript -->
     <script src="../dist/js/sb-admin-2.js"></script>
 
+
+
+    <!-- Menu File -->
+    <!--<script src="../js/common/menu.js"></script>-->
+
     <!-- DataTables JavaScript -->
-    <script src="../vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="../vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
-    <script src="../vendor/datatables-editor/js/dataTables.editor.min.js"></script>
-    <script src="../vendor/datatables-editor/js/editor.bootstrap.min.js"></script>
-    <script src="../vendor/datatables-select/js/dataTables.select.min.js"></script>
-    <script src="../vendor/datatables-button/js/dataTables.buttons.min.js"></script>
-    <script src="../vendor/datatables-button/js/buttons.bootstrap.min.js"></script>
+    <script src="../vendor/datatables/js/jquery.dataTables.js"></script>
+    <script src="../vendor/datatables/js/dataTables.bootstrap.js"></script>
+    <script src="../vendor/datatables-editor/js/dataTables.editor.js"></script>
+    <script src="../vendor/datatables-editor/js/editor.bootstrap.js"></script>
+    <script src="../vendor/datatables-select/js/dataTables.select.js"></script>
+    <script src="../vendor/datatables-button/js/dataTables.buttons.js"></script>
+    <script src="../vendor/datatables-button/js/buttons.bootstrap.js"></script>
+    <script src="../vendor/datatables-keytable/js/dataTables.keyTable.min.js"></script>
     <script src="../js/common/jszip.min.js"></script>
     <script src="../vendor/datatables-button/js/buttons.html5.min.js"></script>
     <script src="../vendor/datatables-button/js/buttons.print.min.js"></script>
 
     <!-- DMS JavaScript -->
-    <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/hmac-sha256.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/enc-base64.js"></script>
+    <script src="../js/common/hmac-sha256.js"></script>
+    <script src="../js/common/enc-base64.js"></script>
     <script src="../js/security.js"></script>
     <script src="../js/script.js"></script>
-    <script src="../js/common/menu.js"></script>
-    <!-- Menu File -->
-
 </body>
 
 </html>

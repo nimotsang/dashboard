@@ -4,10 +4,12 @@
         ajax: {
 
             "edit": {
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentUser",
-                "type": "POST",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentUser",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     if (openValPassWord === editor.field('PassWord').val()) {
                         var param = {
@@ -20,7 +22,7 @@
                             "Name": editor.field('UserName').val(),
                             "PositionName": editor.field('PositionName').val()
                         }
-                        return param;
+                        return JSON.stringify(param);
                     } else {
                         var param = {
                             "token": SecurityManager.generate(),
@@ -30,19 +32,22 @@
                             "StoreName": editor.field('StoreName').val(),
                             "UserCode": editor.field('UserCode').val(),
                             "Name": editor.field('UserName').val(),
-                            "PassWord": editor.field('PassWord').val(),
+                            "PassWord": CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([editor.field('PassWord').val(), SecurityManager.salt].join(':'), SecurityManager.salt)),
                             "PositionName": editor.field('PositionName').val()
                         }
-                        SecurityManager.updatepassword = editor.field('PassWord').val()
-                        return param;
+                        return JSON.stringify(param);
                     }
 
                 }
             },
             "create": {
 
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentUser",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentUser",
+                "async": true,
+                "crossDomain": true,
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -52,10 +57,10 @@
                         "StoreName": editor.field('StoreName').val(),
                         "UserCode": editor.field('UserCode').val(),
                         "Name": editor.field('UserName').val(),
-                        "PassWord": editor.field('PassWord').val(),
+                        "PassWord": CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([editor.field('PassWord').val(), SecurityManager.salt].join(':'), SecurityManager.salt)),
                         "PositionName": editor.field('PositionName').val()
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             }
 
@@ -91,40 +96,6 @@
             }
         }
     });
-
-    editor.on('open', function () {
-        openValPassWord = editor.get("PassWord");
-        var selectMerchant = [];
-        var selectPosition=[];
-        var selectStore=[];
-        $.ajax({
-            "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant_Get',
-            "type": "POST",
-            "async": true,
-            "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
-            "success": function (data) {
-                data = data.ResultSets[0]
-                for (var item in data) {
-                    if (data[item].label === 'Merchant') {
-                        selectMerchant.push(data[item].value);
-                    } else if (data[item].label === 'Position') {
-                        selectPosition.push(data[item].value);
-                    } else if (data[item].label === 'Store') {
-                        selectStore.push(data[item].value);
-                    }
-
-                }
-                editor.field("MerchantName").update(selectMerchant);
-                editor.field("PositionName").update(selectPosition);
-                editor.field("StoreName").update(selectStore);
-            }
-
-        });
-    })
 
     editor.on('preSubmit', function (e, data, action) {
  
@@ -164,19 +135,109 @@
 
     });
 
-    editor.on('postSubmit', function (e, json) {
+    editor.on('postSubmit', function (e, json,data,action) {
         json.data = json.ResultSets[0]
-        SecurityManager.generate(SecurityManager.username, SecurityManager.updatepassword)
-        SecurityManager.updatepassword = null;
+        if (action === 'edit') {
+            for (var i in data.data) {
+                if (data.data[i].PassWord !== openValPassWord && SecurityManager.username === data.data[i].UserName) {
+                    SecurityManager.logout()
+                    window.location = "login.html"
+                    return alert("密码已经更新，请重新登录！");
+                }
+            }
+
+        }
     });
 
-
-    editor.on('initEdit', function () {
+    var openValPassWord;
+    editor.on('initEdit', function (e, node, data) {
         editor.disable(["MerchantName", "StoreName", "UserCode"]);
+        var oMerchantName, oStoreName, oPositionName;
+        var selectMerchant = [], selectStore = [],selectPosition=[];
+
+        // Get existing options
+        oMerchantName = data.MerchantName
+        oStoreName = data.StoreName
+        oPositionName = data.PositionName
+        openValPassWord = data.PassWord
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
+        $.ajax({
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
+            "type": "POST",
+            "async": true,
+            "crossDomain": true,
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
+            "success": function (data) {
+                data = data.ResultSets[0]
+                for (var item in data) {
+                    if (data[item].table === 'Merchant') {
+                        if (data[item].label === oMerchantName) {
+                            selectMerchant.unshift({ label: data[item].label, value: data[item].value });
+                        } else {
+                            selectMerchant.push({ label: data[item].label, value: data[item].value });
+                        }
+                    }
+                    if (data[item].table === 'Store') {
+                        if (data[item].label === oStoreName) {
+                            selectStore.unshift({ label: data[item].label, value: data[item].value });
+                        } else {
+                            selectStore.push({ label: data[item].label, value: data[item].value });
+                        }
+                    }
+                    if (data[item].table === 'Position') {
+                        if (data[item].label === oPositionName) {
+                            selectPosition.unshift({ label: data[item].label, value: data[item].value });
+                        } else {
+                            selectPosition.push({ label: data[item].label, value: data[item].value });
+                        }
+                    }
+                }
+                editor.field("MerchantName").update(selectMerchant)
+                editor.field("StoreName").update(selectStore);
+                editor.field("PositionName").update(selectPosition);
+
+            }
+
+        })
     });
     editor.on('initCreate', function () {
         editor.enable(["MerchantName", "StoreName", "UserCode"]);
-       
+        var selectMerchant = [], selectStore = [],selectPosition=[];
+        $.ajax({
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
+            "type": "POST",
+            "async": true,
+            "crossDomain": true,
+            "data": {
+                "token": SecurityManager.generate(),
+                "username": SecurityManager.username
+            },
+            "success": function (data) {
+                data = data.ResultSets[0]
+                for (var item in data) {
+                    if (data[item].table === 'Merchant') {
+
+
+                        selectMerchant.push({ label: data[item].label, value: data[item].value });
+                    }
+                    if (data[item].table === 'Store') {
+                        selectStore.push({ label: data[item].label, value: data[item].value });
+                    }
+                    if (data[item].table === 'Position') {
+                        selectPosition.push({ label: data[item].label, value: data[item].value });
+                    }
+                }
+                editor.field("MerchantName").update(selectMerchant)
+                editor.field("StoreName").update(selectStore)
+                editor.field("PositionName").update(selectPosition);
+
+            }
+
+        });
     });
 
     //初始化报表
@@ -197,15 +258,19 @@
             { "width": "20%", "targets": 0 }
         ], **/
         ajax: {
-            "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentUser",
-            "type": "POST",
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentUser",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;
@@ -214,7 +279,7 @@
         },
 
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
+            url: "../vendor/datatables/Chinese.json",
             select: {
                 rows: {
                     _: "已选中 %d 行",

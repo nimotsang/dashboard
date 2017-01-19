@@ -4,26 +4,12 @@
         ajax: {
 
             "edit": {
-                "url": "https://mbeta.pw/mocdbapi/Raymsp_Product_Generate",
-                "type": "POST",
+                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
                 "async": true,
                 "crossDomain": true,
-                "data": function () {                  
-                        var param = {
-                            "token": SecurityManager.generate(),
-                            "username": SecurityManager.username,
-                            "sku": editor.field('product_code').val(),
-                            "Short_name": editor.field('Short_name').val(),
-                            "price": editor.field('price').val(),
-                            "Long_name": editor.field('Long_name').val()
-                        }
-                        return param;
-                    } 
-            },
-            "create": {
-
-                "url": "https://mbeta.pw/mocdbapi/Raymsp_Product_Generate",
                 "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -33,8 +19,28 @@
                         "price": editor.field('price').val(),
                         "Long_name": editor.field('Long_name').val()
                     }
-                    return param;
-                }
+                    return JSON.stringify(param);
+                },
+            },
+            "create": {
+
+                "url": sysSettings.domainPath + "Raymsp_GatewayPaymentProduct_Generate",
+                "async": true,
+                "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
+                "data": function () {
+                    var param = {
+                        "token": SecurityManager.generate(),
+                        "username": SecurityManager.username,
+                        "sku": editor.field('product_code').val(),
+                        "Short_name": editor.field('Short_name').val(),
+                        "price": editor.field('price').val(),
+                        "Long_name": editor.field('Long_name').val()
+                    }
+                    return JSON.stringify(param);
+                },
             }
         },
         idSrc: 'product_code',
@@ -88,8 +94,8 @@
         if (!price.isMultiValue()) {
             if (!price.val()) {
                 price.error("价格不能为空，请重新输入");
-            } else if (!checkcode(price.val())) {
-                price.error("价格只能是字母和数字，请重新输入");
+            } else if (!checkprice(price.val())) {
+                price.error("价格格式不正确，请重新输入");
                     }
                 }
         if (!Long_name.isMultiValue()) {
@@ -136,15 +142,19 @@
             { "width": "20%", "targets": 0 }
         ], **/
         ajax: {
-            "url": "https://mbeta.pw/mocdbapi/Raymsp_FindProduct_Page",
-            "type": "POST",
+            "url": sysSettings.domainPath + "Raymsp_GatewaypaymentProduct_Query",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc": function (data) {
                 data = data.ResultSets[0]
                 return data;
@@ -153,7 +163,7 @@
         },
 
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
+            url: "../vendor/datatables/Chinese.json",
             select: {
                 rows: {
                     _: "已选中 %d 行",

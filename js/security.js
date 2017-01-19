@@ -5,10 +5,9 @@
 */
 var SecurityManager = {
     salt: '9dTLtQ6H3AlyiI3nWghM',
-    username: localStorage['SecurityManager.username'],
-    key: localStorage['SecurityManager.key'],
-    ip: null,
-    updatepassword:null,
+    username: sessionStorage['SecurityManager.username'],
+    key: sessionStorage['SecurityManager.key'],
+    ip: sessionStorage['SecurityManager.ip'],
     generate: function (username, password) {
         // Generates a token to be used for API calls. The first time during authentication, pass in a username/password. All subsequent calls can simply omit username and password, as the same token key (hashed password) will be used.
         if (username && password) {
@@ -22,13 +21,14 @@ var SecurityManager = {
         // Set the key to a hash of the user's password + salt.
         SecurityManager.key = SecurityManager.key || CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256([password, SecurityManager.salt].join(':'), SecurityManager.salt));
 
-        // Set the client IP address.
-        SecurityManager.ip = SecurityManager.ip || SecurityManager.getIp();
+        // Set the client IP address.         // **Add GetIP ahead on login page **
+        //SecurityManager.ip = SecurityManager.ip || SecurityManager.getIp();
 
         // Persist key pieces.
         if (SecurityManager.username) {
-            localStorage['SecurityManager.username'] = SecurityManager.username;
-            localStorage['SecurityManager.key'] = SecurityManager.key;
+            sessionStorage['SecurityManager.username'] = SecurityManager.username;
+            sessionStorage['SecurityManager.key'] = SecurityManager.key;
+            sessionStorage['SecurityManager.ip'] = SecurityManager.ip;
         }
 
         // Get the (C# compatible) ticks to use as a timestamp. http://stackoverflow.com/a/7968483/2596404
@@ -53,12 +53,13 @@ var SecurityManager = {
     },
 
     logout: function () {
-        SecurityManager.ip = null;
+        // **Add GetIP ahead on login page **
+        //SecurityManager.ip = null;
 
-        localStorage.removeItem('SecurityManager.username');
+        sessionStorage.removeItem('SecurityManager.username');
         SecurityManager.username = null;
 
-        localStorage.removeItem('SecurityManager.key');
+        sessionStorage.removeItem('SecurityManager.key');
         SecurityManager.key = null;
     },
 
@@ -66,11 +67,13 @@ var SecurityManager = {
         var result = '';
 
         $.ajax({
-            url: 'https://mbeta.pw/mocdbapi/api/ip/index',
-            async:false,
+            url: sysSettings.domainPath + 'api/ip/index',
+            async:true,
             method: 'GET',
             success: function (ip) {
+                SecurityManager.ip = ip;
                 result = ip;
+
             }
         });
 

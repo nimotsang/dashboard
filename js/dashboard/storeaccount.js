@@ -4,10 +4,19 @@
         ajax: {
 
             "edit": {
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentStorePaymentMethod",
-                "type": "POST",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStorePaymentMethod",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
+                "data": function () {
+                    var param = {
+                        "token": SecurityManager.generate(),
+                        "username": SecurityManager.username,
+                    }
+                    return JSON.stringify(param);
+                },
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -19,14 +28,16 @@
                         "PaymentMethodDefault": storeaccounteditor.field('PaymentMethodDefault').val(),
                         "Uniqueid": storeaccounteditor.field("Uniqueid").val()
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             },
             "create": {
-                "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentStorePaymentMethod",
-                "type": "POST",
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStorePaymentMethod",
                 "async": true,
                 "crossDomain": true,
+                "type": "POST",
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
                 "data": function () {
                     var param = {
                         "token": SecurityManager.generate(),
@@ -37,7 +48,7 @@
                         "methodtypejoinuniqueid": storeaccounteditor.field('MethodTypeJoin').val(),
                         "PaymentMethodDefault": storeaccounteditor.field('PaymentMethodDefault').val(),
                     }
-                    return param;
+                    return JSON.stringify(param);
                 }
             }
 
@@ -91,16 +102,18 @@
         var PaymentMethodDefault = storeaccounteditor.field("PaymentMethodDefault");
         var result;
         if (action === "edit" && PaymentMethodDefault.val()) {
+            var param = {};
+            param.token = SecurityManager.generate();
+            param.username = SecurityManager.username;
+            param.StoreUniqueid = this.field("StoreName").val();
            $.ajax({
-                "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentDefaultMethodCheck',
+               "url": sysSettings.domainPath + "RaymSP_GatewayPaymentDefaultMethodCheck",
                 "type": "POST",
                 "async": false,
                 "crossDomain": true,
-                "data": {
-                    "token": SecurityManager.generate(),
-                    "username": SecurityManager.username,
-                    "StoreUniqueid": this.field("StoreName").val()
-                },
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
+                "data": JSON.stringify(param),
                 "success": function (data) {
                     if (data.ResultSets[0]) {
                         data = data.ResultSets[0]
@@ -157,17 +170,18 @@
         oMerchantName = data.MerchantName
         oStoreName = data.StoreName
         oMethodTypeJoin = data.MethodTypeJoin
-
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
 
             $.ajax({
-                "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant_Get',
+                "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
                 "type": "POST",
                 "async": true,
                 "crossDomain": true,
-                "data": {
-                    "token": SecurityManager.generate(),
-                    "username": SecurityManager.username
-                },
+                "dataType": "json",
+                "contentType": "application/json; charset=utf-8",
+                "data": JSON.stringify(param),
                 "success": function (data) {
                     data = data.ResultSets[0]
                     for (var item in data) {
@@ -204,15 +218,17 @@
     });
     storeaccounteditor.on('initCreate', function () {
         var selectMerchant = [], selectStore = [], selectMethodTypeJoin = [];
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
         $.ajax({
-            "url": 'https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentMerchant_Get',
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentMerchant_Get",
             "type": "POST",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
                 for (var item in data) {
@@ -291,15 +307,19 @@
             { "width": "20%", "targets": 1 }
         ],
         ajax: {
-            "url": "https://mbeta.pw/mocdbapi/RaymSP_GatewayPaymentStorePaymentMethod",
-            "type": "POST",
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentStorePaymentMethod",
             "async": true,
             "crossDomain": true,
-            "data": {
-                "token": SecurityManager.generate(),
-                "username": SecurityManager.username
-            },
+            "type": "POST",
             "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                }
+                return JSON.stringify(param);
+            },
             "dataSrc":function (data) {
                 data = data.ResultSets[0]
                 return data;
@@ -308,7 +328,7 @@
         },
 
          language: {
-             url: "//cdn.datatables.net/plug-ins/1.10.12/i18n/Chinese.json",
+             url: "../vendor/datatables/Chinese.json",
              select:{
                  rows:{
                      _: "已选中 %d 行",

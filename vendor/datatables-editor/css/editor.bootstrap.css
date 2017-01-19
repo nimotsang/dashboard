@@ -1,6 +1,11 @@
 div.DTE div.DTE_Form_Error {
-  display: none;
   color: #b11f1f;
+}
+
+div.modal div.DTE div.DTE_Form_Error {
+  display: none;
+  float: left;
+  padding-top: 7px;
 }
 
 div.DTE_Field div.multi-value,
@@ -74,15 +79,16 @@ div.DTE_Inline div.DTE_Field input[type="url"],
 div.DTE_Inline div.DTE_Field input[type="week"] {
   margin: -6px 0;
 }
-div.DTE_Inline.DTE_Processing:after {
-  position: absolute;
-  content: ' ';
-  display: block;
-  top: 4px;
-  right: 10px;
-  height: 12px;
-  width: 17px;
-  background: url("../images/ajax-loader-small.gif") no-repeat top left;
+div.DTE_Inline div.DTE_Field_Error,
+div.DTE_Inline div.DTE_Form_Error {
+  font-size: 11px;
+  line-height: 1.2em;
+  padding: 0;
+  margin-top: 10px;
+}
+div.DTE_Inline div.DTE_Field_Error:empty,
+div.DTE_Inline div.DTE_Form_Error:empty {
+  margin-top: 0;
 }
 
 span.dtr-data div.DTE_Inline {
@@ -101,6 +107,8 @@ div.DTE_Inline div.DTE_Field input.form-control {
 }
 div.DTE_Inline div.DTE_Field div.help-block {
   display: none;
+  margin-top: 10px;
+  margin-bottom: 0;
 }
 div.DTE_Inline.DTE_Processing:after {
   top: 5px;
@@ -304,7 +312,8 @@ div.DTE_Bubble div.DTE_Bubble_Liner div.DTE_Bubble_Close:after {
   display: block;
 }
 div.DTE_Bubble div.DTE_Bubble_Triangle {
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 div.DTE_Bubble_Background {
@@ -587,4 +596,94 @@ div.editor-datetime div.editor-datetime-iconUp {
 div.editor-datetime div.editor-datetime-iconDown {
   height: 20px;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAALCAMAAABf9c24AAAAFVBMVEX///99fX1+fn57e3t6enoAAAAAAAC73bqPAAAABnRSTlMAYmJkZt92bnysAAAAMElEQVR4AWOgDmBiRQIsmPKMrGxQgJDFlEfIYpoPk8Utz8qM232MYFfhkQfKUg8AANefAQxecJ58AAAAAElFTkSuQmCC");
+}
+
+div.editor-datetime-error {
+  padding: 0 1em;
+  max-width: 240px;
+  font-size: 11px;
+  line-height: 1.25em;
+  text-align: center;
+  color: #b11f1f;
+}
+
+div.DTE div.DTE_Processing_Indicator {
+  position: absolute;
+  top: 17px;
+  right: 9px;
+  height: 2em;
+  width: 2em;
+  z-index: 20;
+  font-size: 12px;
+  display: none;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+div.DTE.processing div.DTE_Processing_Indicator {
+  display: block;
+}
+div.DTE.DTE_Inline div.DTE_Processing_Indicator {
+  top: 5px;
+  right: 6px;
+  font-size: 6px;
+}
+div.DTE.DTE_Bubble div.DTE_Processing_Indicator {
+  top: 10px;
+  right: 14px;
+  font-size: 8px;
+}
+div.DTE div.DTE_Processing_Indicator span,
+div.DTE div.DTE_Processing_Indicator:before,
+div.DTE div.DTE_Processing_Indicator:after {
+  display: block;
+  background: black;
+  width: 0.5em;
+  height: 1.5em;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.1);
+  -webkit-animation: editorProcessing 0.9s infinite ease-in-out;
+  animation: editorProcessing 0.9s infinite ease-in-out;
+}
+div.DTE div.DTE_Processing_Indicator:before,
+div.DTE div.DTE_Processing_Indicator:after {
+  position: absolute;
+  top: 0;
+  content: '';
+}
+div.DTE div.DTE_Processing_Indicator:before {
+  left: -1em;
+  -webkit-animation-delay: -0.3s;
+  animation-delay: -0.3s;
+}
+div.DTE div.DTE_Processing_Indicator span {
+  -webkit-animation-delay: -0.15s;
+  animation-delay: -0.15s;
+}
+div.DTE div.DTE_Processing_Indicator:after {
+  left: 1em;
+}
+@-webkit-keyframes editorProcessing {
+  0%,
+		80%,
+		100% {
+    transform: scale(1, 1);
+  }
+  40% {
+    transform: scale(1, 1.5);
+  }
+}
+@keyframes editorProcessing {
+  0%,
+		80%,
+		100% {
+    transform: scale(1, 1);
+  }
+  40% {
+    transform: scale(1, 1.5);
+  }
+}
+div.DTE div.DTE_Processing_Indicator {
+  top: 52px;
+  right: 12px;
 }

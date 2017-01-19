@@ -16,26 +16,15 @@ div.DTED_Envelope_Wrapper {
 	// Create a shadow display at the top of the evelope to make it look like it has
 	// come from under the element that it is attached to/ Left and right to give a
 	// slight fade and the two ends
-	div.DTED_Envelope_ShadowLeft {
+	div.DTED_Envelope_Shadow {
 		position: absolute;
-		top: 0;
-		left: 0;
-		width: 50%;
-		height: 9px;
-		background: url('../images/shadow_left.png') no-repeat top left;
+		top: -10px;
+		left: 10px;
+		right: 10px;
+		height: 10px;
 		z-index: 10;
+		box-shadow: 0 0 20px black;
 	}
-
-	div.DTED_Envelope_ShadowRight {
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 50%;
-		height: 9px;
-		background: url('../images/shadow_right.png') no-repeat top right;
-		z-index: 10;
-	}
-
 
 	div.DTED_Envelope_Container {
 		position: absolute;
