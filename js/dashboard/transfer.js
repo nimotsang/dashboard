@@ -1,0 +1,1054 @@
+﻿$(document).ready(function () {
+    //新增及修改调整
+    var editor = new $.fn.dataTable.Editor({
+
+        idSrc: 'UniqueId',
+        table: '#TransferTable',
+        fields: [
+            //调整-参数设置
+            { label: 'transfer_status: ', name: 'transfer_status', type: 'hidden' },
+            { label: 'transfer_from_store_uniqueid: ', name: 'transfer_from_store_uniqueid', type: 'hidden' },
+            { label: 'transfer_from_store_id: ', name: 'transfer_from_store_id', type: 'hidden' },
+            { label: 'reason_id: ', name: 'reason_id', type: 'hidden' },
+            { label: 'transfer_to_store_id: ', name: 'transfer_to_store_id', type: 'hidden' },
+            { label: 'transfer_to_store_uniqueid: ', name: 'transfer_to_store_uniqueid', type: 'hidden' },
+            { label: 'transfer_type_code: ', name: 'transfer_type', type: 'hidden' },
+            { label: 'UniqueId: ', name: 'RecStoreUniqueId', type: 'hidden' },
+            { label: '代码: ', name: 'transfer_number', type:'readonly' },
+            {
+                label: '创建日期: ', name: 'CreationDate',
+                type: 'datetime',
+                def: function () { return new Date(); },
+                format: 'YYYY-MM-DD',
+            },
+            { label: '发出门店: ', name: 'Transfer_From_Store_Description', type: 'select' },
+            { label: '接收门店: ', name: 'Transfer_To_Store_Description', type: 'select' },
+            { label: '状态: ', name: 'TransferStatus_Description', type: 'readonly' },
+            { label: '原因: ', name: 'Reason_Code', type: 'select' },
+            { label: '用户: ', name: 'UserName', type:'readonly',def:SecurityManager.username},
+            { label: '备注: ', name: 'transfer_note', type: 'textarea', attr: {
+                "maxlength":'200'}},
+
+            //产品查询条件
+            { label: '产品代码: ', name: 'ProductCode' },
+            { label: '产品名称: ', name: 'ProductName' },
+            { label: '颜色组: ', name: 'ColorChart', type: 'select', placeholder: '未定义' },
+            { label: '尺码组: ', name: 'SizeChart', type: 'select', placeholder: '未定义' },
+            { label: '供应商: ', name: 'Supplier', type: 'select', placeholder: '未定义' },
+            { label: '产品类别: ', name: 'ProductType', type: 'select', placeholder: '未定义' },
+            { label: '季节: ', name: 'Season', type: 'select', placeholder: '未定义' },
+            { label: '产品层级(一): ', name: 'Division', placeholder: '未定义' },
+            { label: '产品层级(二): ', name: 'Department', placeholder: '未定义' },
+            { label: '产品层级(三): ', name: 'SubDepartment', placeholder: '未定义' },
+            { label: '产品层级(四): ', name: 'Class', placeholder: '未定义' },
+            { label: '零售价: ', name: 'RetailPrice' },
+            { label: '成本价: ', name: 'CostPrice' },
+
+        ],
+
+
+
+
+        //自定义语言
+        i18n: {
+
+            "create": {
+                "button": '新增',
+                "title": '新增采购申请',
+                "submit": '提交'
+            },
+            "edit": {
+                "button": '修改',
+                "title": '采购申请单管理',
+                "submit": '提交'
+            },
+            "multi": {
+                "title": "批量修改",
+                "info": "批量修改帮助您将所选单元格中的值修改为同一值，要继续修改请单击按钮",
+                "restore": "取消修改"
+            },
+            "datetime": {
+                "previous": '前',
+                "next": '后',
+                "months": ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                "weekdays": ['日', '一', '二', '三', '四', '五', '六', ]
+            }
+        }
+    });
+    //主表
+    var table;
+    //产品明细调整编辑器
+    var pceditor;
+    //产品表
+    var ptable;
+    //产品调整明细表
+    var pctable;
+
+    var pcval = [];
+
+    //初始化编辑器
+    editor.on('open displayOrder', function (e, mode, action) {
+        if (mode === 'main' && action !== 'remove') {
+            //增加HTML
+            addhtml();
+            //增加tab1按键
+            tab1btn();
+            //定义Tabs规则
+            addtab();
+
+            //初始化报表-产品列表
+            ptable = $("#ProductTable").DataTable({
+                processing: true,
+                //dom: 'Bfrtip',
+                lengthChange: false,
+                select: true,
+                order: [[0, "asc"]],
+                columns: [
+                { "data": "ProductCode" },
+                { "data": "ProductName" },
+                { "data": "Color" },
+                { "data": "Size" },
+                { "data": "Supplier" },
+                { "data": "RetailPrice" },
+                ],
+                language: {
+                    url: "../vendor/datatables/Chinese.json",
+                    select: {
+                        rows: {
+                            _: "已选中 %d 行",
+                            0: ""
+                        }
+                    }
+                },
+
+            });
+
+            //产品明细-调整
+            pceditor = new $.fn.dataTable.Editor({
+                idSrc: 'LineId',
+                table: '#ProductDetailTable',
+                fields: [
+                    { label: 'TRANSFER_FROM_STORE_ID: ', name: 'TRANSFER_FROM_STORE_ID', type: 'hidden' },
+                    { label: 'TRANSFER_TO_STORE_ID: ', name: 'TRANSFER_TO_STORE_ID', type: 'hidden' },
+                    { label: 'REASON_ID: ', name: 'REASON_ID', type: 'hidden' },
+                    { label: 'TRANSFER_NUMBER: ', name: 'TRANSFER_NUMBER', type: 'hidden' },
+                    { label: 'PRODUCT_ID: ', name: 'PRODUCT_ID', type: 'hidden' },
+                    { label: 'color_ID: ', name: 'color_ID', type: 'hidden' },
+                    { label: 'size_ID: ', name: 'size_ID', type: 'hidden' },
+                    { label: '序号: ', name: 'LineId' },
+                    { label: '序号: ', name: 'ProductCode' },
+                    { label: '序号: ', name: 'ProductName' },
+                    { label: '序号: ', name: 'Color' },
+                    { label: '序号: ', name: 'Size' },
+                    { label: '序号: ', name: 'OnHeandQty' },
+                    { label: '序号: ', name: 'Qty' },
+                    { label: '序号: ', name: 'RetailPrice' },
+                    { label: '序号: ', name: 'CostPrice' },
+                    { label: '序号: ', name: 'Supplier' },
+                ],
+
+
+
+                ajax: function (method, url, data, success, error) {
+                    // NOTE - THIS WILL WORK FOR EDIT ONLY AS IS
+                    if (data.action === 'edit') {
+                        success({
+                            data: $.map(data.data, function (val, key) {
+                                val.DT_RowId = key;
+                                var nval = {};
+                                nval.OrderRequestHeader = editor.field('ORHUniqueId').val();
+                                nval.Store = editor.field('Store').val();
+                                nval.RecStore = editor.field('RecStore').val();
+                                nval.Product = val.Product_UniqueId;
+                                nval.Color = val.Color_UniqueId;
+                                nval.Size = val.Size_UniqueId;
+                                nval.Qty = Number(val.Qty);
+                                nval.LineId = Number(val.LineId);
+                                nval.PurchasePrice = Number(val.PurchasePrice);
+                                nval.RetailPrice = Number(val.RetailPrice);
+                                nval.TotalAmount = Number(nval.Qty*nval.PurchasePrice);
+                                nval.OrderRequestStatus = editor.field('ORSUniqueId').val();
+                                nval.OrderRequestType = editor.field('ORTUniqueId').val();
+
+                                if (pcval.length > 0) {
+                                    for (x in pcval) {
+                                        if (pcval[x].Product === nval.Product && pcval[x].Color === nval.Color && pcval[x].Size === nval.Size) {
+                                            if (nval.Qty !== 0) {
+                                                pcval.splice(x, 1, nval);
+                                            } else {
+                                                pcval.splice(x, 1);
+                                            }
+
+                                        } else if (pcval.length-1>0) {
+                                            continue;
+                                        } else {
+                                            if (nval.Qty !== 0) {
+                                                pcval.push(nval);
+                                            }
+                                        }
+                                    }
+                                }
+                                else {
+                                    if (nval.Qty !== 0) {
+                                        pcval.push(nval);
+                                    }
+                                }
+                                console.log(pcval)
+                                pctable.draw();
+                                return val;
+                            })
+                        });
+                    }
+                }
+
+            });
+
+            //初始化报表-产品调整明细
+            pctable = $("#ProductDetailTable").DataTable({
+                processing: true,
+                //dom: 'Bfrtip',
+                lengthChange: false,
+                select: false,
+                order: [[0, "asc"]],
+                columns: [
+                { "data": "LineId"},
+                { "data": "ProductCode"},
+                { "data": "ProductName"},
+                { "data": "Color"},
+                { "data": "Size" },
+                { "data": "BinStockQty" },
+                { "data": "BinCode" },
+                { "data": "Qty", "defaultContent": "编辑数量", "className": 'editable'},
+                { "data": "RetailPrice" },
+                { "data": "CostPrice" },
+                { "data": "Supplier" },
+                ],
+
+                language: {
+                    url: "../vendor/datatables/Chinese.json",
+                    select: {
+                        rows: {
+                            _: "已选中 %d 行",
+                            0: ""
+                        }
+                    }
+                },
+
+
+            });
+
+            $('#ProductDetailTable').on('click', 'tbody td.editable', function (e) {
+                pceditor.inline(this, {
+                    onBlur: 'submit',
+                    //onComplete:'none',
+                    submit: 'all',
+                    //onReturn: 'none',
+                    onBackground: close
+                });
+            });
+
+
+        }
+
+
+    });
+
+    //新增数据
+    editor.on('initCreate', function (e, node, data) {
+        //搜索条件下拉框
+        var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
+        var selectStore = [], selectPCGrid = [], selectDivision = [], selectDepartment = [], selectSubDepartment = [], selectClass = [];
+        var selectORType = [], selectORStatus = [], selectStore = [], selectPO_Types = [];
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
+        $.ajax({
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
+            "type": "POST",
+            "async": true,
+            "crossDomain": true,
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
+            "success": function (data) {
+                data = data.ResultSets[0]
+                for (var item in data) {
+                    switch (data[item].table) {
+                        case 'Supplier': {
+                            selectSupplier.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'ColorChart': {
+                            selectColorChart.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'SizeChart': {
+                            selectSizeChart.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'ProductType': {
+                            selectProductType.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'Season': {
+                            selectSeason.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'ORType': {
+                            selectORType.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'ORStatus': {
+                            if (data[item].label === 'O') {
+                                selectORStatus.unshift({ label: data[item].label, value: data[item].value })
+
+                            } else {
+                                selectORStatus.push({ label: data[item].label, value: data[item].value });
+                            }
+                            break;
+                        }
+                        case 'Store': {
+                            selectStore.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'PO_Types': {
+                            if (data[item].label === 'Suggested') {
+                                selectPO_Types.unshift({ label: data[item].label, value: data[item].value });
+                            } else {
+                                selectPO_Types.push({ label: data[item].label, value: data[item].value });
+                            }
+                            break;
+                        }
+                    }
+                };
+                //editor.field("OrderRequestStatus").update(selectORStatus)
+                editor.field("PTName").update(selectPO_Types)
+                editor.field("Store").update(selectStore)
+                editor.field("RecStore").update(selectStore)
+                editor.field("SUName").update(selectSupplier)
+                editor.field("Supplier").update(selectSupplier)
+                editor.field("ColorChart").update(selectColorChart)
+                editor.field("SizeChart").update(selectSizeChart)
+                editor.field("ProductType").update(selectProductType)
+                editor.field("SEName").update(selectSeason)
+                editor.field("Season").update(selectSeason)
+                editor.field("ORSUniqueId").val(selectORStatus[0].value)
+                editor.field("ORSCode").val('待确认')
+            }
+
+        });
+
+        editor.enable();
+
+
+    });
+    //修改数据
+    editor.on('initEdit', function (e, node, data) {
+        //搜索条件下拉框
+        var exdata = [];
+        var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
+        var selectStore = [], selectRecStore = [], selectReason = []
+        var param = {};
+        param.token = SecurityManager.generate();
+        param.username = SecurityManager.username;
+        // Get existing options
+        exdata = data
+        if (exdata.transfer_status !== null) {
+            switch (exdata.transfer_status) {
+                case "-1": {
+                    editor.field("TransferStatus_Description").val('保存')
+                    break;
+                }
+                case "3 ": {
+                    editor.field("TransferStatus_Description").val('已发送')
+                    break;
+                }
+                case "5 ": {
+                    editor.field("TransferStatus_Description").val('已接收')
+                    break;
+                }
+                default: {
+                    return exdata.TransferStatus_Description;
+                    break;
+                }
+            }
+        }
+        $.ajax({
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
+            "type": "POST",
+            "async": true,
+            "crossDomain": true,
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
+            "success": function (data) {
+                data = data.ResultSets[0]
+                for (var item in data) {
+                    switch (data[item].table) {
+                        case 'Supplier': {
+                            selectSupplier.push({ label: data[item].label, value: data[item].value });
+                            break;
+                            }
+                        case 'ColorChart': {
+                            selectColorChart.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'SizeChart': {
+                            selectSizeChart.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'ProductType': {
+                            selectProductType.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'Season': {
+                            selectSeason.push({ label: data[item].label, value: data[item].value });
+                            break;
+                        }
+                        case 'Store': {
+                            if (exdata.transfer_from_store_id !== Number(data[item].ext1)) {
+                                selectStore.push({ label: data[item].label, value: data[item].value });
+                            } else {
+                                selectStore.unshift({ label: data[item].label, value: data[item].value});
+                            }
+                            if (exdata.transfer_to_store_id !== Number(data[item].ext1)) {
+                                selectRecStore.push({ label: data[item].label, value: data[item].value });
+                            } else {
+                                selectRecStore.unshift({ label: data[item].label, value: data[item].value});
+                            }
+                            break;
+                        }
+                    }
+                };
+                param.lbu_id = 12;
+                $.ajax({
+                    "url": sysSettings.domainPath + "rmSP_RAMS_GetReasonByLbu",
+                    "type": "POST",
+                    "async": true,
+                    "crossDomain": true,
+                    "dataType": "json",
+                    "contentType": "application/json; charset=utf-8",
+                    "data": JSON.stringify(param),
+                    "success": function (data) {
+                        data = data.ResultSets[0]
+                        for (var item in data) {
+                            if (exdata.reason_id !== data[item].reason_ID) {
+                                selectReason.push({ label: data[item].Description, value: data[item].reason_ID });
+                            } else {
+                                selectReason.unshift({ label: data[item].Description, value: data[item].reason_ID });
+                            }
+                        }
+                        editor.field("Reason_Code").update(selectReason)
+                    }
+                })
+                editor.field("Supplier").update(selectSupplier)
+                editor.field("ColorChart").update(selectColorChart)
+                editor.field("SizeChart").update(selectSizeChart)
+                editor.field("ProductType").update(selectProductType)
+                editor.field("Season").update(selectSeason)
+                editor.field("Transfer_From_Store_Description").update(selectStore)
+                editor.field("Transfer_To_Store_Description").update(selectRecStore)
+            }
+        });
+
+
+        param.transfer_number = editor.field("transfer_number").val();
+
+
+        /**
+                        fields: [
+                    { label: 'TRANSFER_FROM_STORE_ID: ', name: 'TRANSFER_FROM_STORE_ID', type: 'hidden' },
+                    { label: 'TRANSFER_TO_STORE_ID: ', name: 'TRANSFER_TO_STORE_ID', type: 'hidden' },
+                    { label: 'REASON_ID: ', name: 'REASON_ID', type: 'hidden' },
+                    { label: 'TRANSFER_NUMBER: ', name: 'TRANSFER_NUMBER', type: 'hidden' },
+                    { label: 'PRODUCT_ID: ', name: 'PRODUCT_ID', type: 'hidden' },
+                    { label: 'color_ID: ', name: 'color_ID', type: 'hidden' },
+                    { label: 'size_ID: ', name: 'size_ID', type: 'hidden' },
+                    { label: '序号: ', name: 'LineId' },
+                    { label: '序号: ', name: 'ProductCode' },
+                    { label: '序号: ', name: 'ProductName' },
+                    { label: '序号: ', name: 'Color' },
+                    { label: '序号: ', name: 'Size' },
+                    { label: '序号: ', name: 'OnHeandQty' },
+                    { label: '序号: ', name: 'Qty' },
+                    { label: '序号: ', name: 'RetailPrice' },
+                    { label: '序号: ', name: 'CostPrice' },
+                    { label: '序号: ', name: 'Supplier' },
+        **/
+        $.ajax({
+            "url": sysSettings.domainPath + "rmSP_RAMS_GetTransferSendDetail",
+            "type": "POST",
+            "async": true,
+            "crossDomain": true,
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": JSON.stringify(param),
+            "success": function (data) {
+                data = data.ResultSets[0]
+                for (var i = 0; i < data.length; i++) {
+                    data[i].LineId = data[i].SEQUENCE;
+                    data[i].ProductCode = data[i].product_code;
+                    data[i].ProductName = data[i].Short_name;
+                    data[i].Color = data[i].color_code;
+                    data[i].Size = data[i].size_code;
+                    data[i].RetailPrice = data[i].retailprice;
+                    data[i].CostPrice = data[i].costprice;
+                    data[i].ShortSKU = data[i].short_sku;
+                    data[i].BinCode = data[i].bin_code;
+                    data[i].BinId = data[i].bin_id;
+                    data[i].Supplier = data[i].SupplierName;
+                    data[i].Qty = data[i].TRANSFER_QUANTITY;
+                }
+                pctable.clear().draw();//重置产品明细列表
+                data.forEach(function (node) {
+                    pctable.row.add(node);
+                })
+                pctable.draw();
+
+                if (editor.field("transfer_status").val() === "-1" || editor.field("transfer_status").val() === "保存") {
+                    editor.enable();
+                    $("a#li-tab3,a#li-tab2").css("display", "block");
+                } else {
+                    editor.disable();
+                    $("a#li-tab3,a#li-tab2").css("display", "none")
+                    $('#PriceChangeTable').off('click', 'tbody td.editable');
+                }
+
+            }
+
+
+        });
+
+    });
+
+    //初始化产品报表
+    table = $("#TransferTable").DataTable({
+        processing: false,
+        //dom: 'Bfrtip',
+        lengthChange: false,
+        select: true,
+        order: [[0, "asc"]],
+        columns: [
+        { "data": "Id"},
+        { "data": "transfer_number" },
+        { "data": "Transfer_From_Store_Description" },
+        { "data": "Transfer_To_Store_Description" },
+        {
+            "data": "transfer_status", "render": function (data, type, row) {
+                if (data !== null) {
+                    switch (data) {
+                        case "-1": {
+                            return data = '保存';
+                            break;
+                        }
+                        case "3 ": {
+                            return data = '已发送';
+                            break;
+                        }
+                        case "5 ": {
+                            return data = '已接收';
+                            break;
+                        }
+                        default: {
+                            return data;
+                            break;
+                        }
+                    }
+                }
+            }
+        },
+        { "data": "qty_sent" },
+        {
+            "data": "qty_rec", "render": function (data, type, row) {
+                if (data===null) {
+                    return 0;
+                } else {
+                    return data;
+                }
+            }
+        },
+        {
+            "data": "Reason_Code", "render": function (data, type, row) {
+                if (data.length > 0) {
+                    return data.substring(0, 10);
+                }
+            }
+        },
+        {
+            "data": "transfer_date", "render": function (data, type, row) {
+                if (data.length > 0) {
+                    return data.substring(0, 10);
+                }
+            }
+        },
+        {
+            "data": "posting_date", "render": function (data, type, row) {
+                if (data.length > 0) {
+                    return data.substring(0, 10);
+                }
+            }
+        }
+        ],
+        ajax: {
+            "url": sysSettings.domainPath + "rmSP_RAMS_GetTransferSendMain",
+            "async": true,
+            "crossDomain": true,
+            "type": "POST",
+            "dataType": "json",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () {
+                var param = {
+                    "token": SecurityManager.generate(),
+                    "username": SecurityManager.username,
+                    "store_code_id": -1,
+                    "Filter": "TransactionStoreGrid"+"<"+"1000014"+">"
+                }
+                return JSON.stringify(param);
+            },
+            "dataSrc": function (data) {
+                data = data.ResultSets[0]
+                for (var i = 0; i < data.length; i++) {
+                    data[i].Id = i + 1;
+                }
+                return data;
+
+            }
+        },
+        rowId:'Id',
+        language: {
+            url: "../vendor/datatables/Chinese.json",
+            select: {
+                rows: {
+                    _: "已选中 %d 行",
+                    0: ""
+                }
+            }
+        },
+        //添加按键 编辑，打印及导出
+
+        initComplete: function () {
+            table.buttons().container().appendTo('#TransferTable_wrapper .col-sm-6:eq(0)');
+
+        },
+        buttons: [
+    { extend: 'create', editor: editor, text: '新建' },
+    { extend: 'edit', editor: editor, text: '修改' },
+    { extend: 'print', text: '打印' },
+    {
+        extend: 'collection',
+        text: '导出到..',
+        buttons: [
+            'excel',
+            'csv'
+        ]
+    }
+
+
+        ],
+    });
+
+
+    //定义 Tab1 按键
+    function tab1btn() {
+        editor.buttons([
+       {
+           label: '保存', className: 'btn btn-primary', fn: function () {
+               if (editor.field('Code').val().length > 0 && editor.field('ORSCode').val() !== '待确认') {
+                   this.blur();
+               } else {
+                   var param = {};
+                   param.token = SecurityManager.generate();
+                   param.username = SecurityManager.username;
+                   param.code= editor.field('Code').val()? editor.field('Code').val(): null,
+                   param.description= editor.field('Description').val(),
+                   param.or_status= editor.field('ORSUniqueId').val(),
+                   param.requestdate= editor.field('RequestDate').val(),
+                   param.creationdate= editor.field('CreationDate').val(),
+                   param.store = editor.field('Store').val()
+                   param.recstore= editor.field('RecStore').val(),
+                   param.supplier= editor.field('SUName').val(),
+                   param.season= editor.field('SEName').val(),
+                   param.po_types = editor.field('PTName').val(),
+                   param.po_reference = editor.field('PO_Reference').val()
+                   $.ajax({
+                       "url": sysSettings.domainPath + "Gatewaypayment_PORequest_header",
+                       "async": true,
+                       "crossDomain": true,
+                       "type": "POST",
+                       "dataType": "json",
+                       "contentType": "application/json; charset=utf-8",
+                       "data": JSON.stringify(param),
+                       "success": function (data) {
+                           if (typeof (data.ResultSets[0][0]) !== 'undefined') {
+                               table.draw();
+                               editor.field('Code').val(data.ResultSets[0][0]["Code"]);
+                               editor.field('ORHUniqueId').val(data.ResultSets[0][0]["ORHUniqueId"]);
+                               editor.field('ORSUniqueId').val(data.ResultSets[0][0]["ORSUniqueId"]);
+                               editor.field('ORTUniqueId').val(data.ResultSets[0][0]["ORTUniqueId"]);
+                               editor.message('保存成功').true;
+                               return false;
+                               //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
+                               //table.row('#'+ data.ResultSets[0][0].session_number).remove();
+                               //table.row.add(data.ResultSets[0][0]).draw();
+
+                           }
+                           }
+                   })
+
+               }
+
+           }
+       },
+      { label: '取消', fn: function () { this.blur(); } }
+        ])
+    };
+    //定义HTML Tab
+    function addhtml() {
+        /** 创建 产品Tabs (搜索条件，列表及产品调整明细) **/
+
+        var html = '<div class="tabs-container">' +
+                    '<ul class="nav nav-tabs">' +
+                        '<li class="active"><a data-toggle="tab" id="li-tab1" href="#tab-1">参数设置</a></li>' +
+                        '<li class=""><a data-toggle="tab" id="li-tab2" href="#tab-2">产品搜索条件</a></li>' +
+                        '<li class=""><a data-toggle="tab" id="li-tab3" href="#tab-3">产品列表</a></li>' +
+                        '<li class=""><a data-toggle="tab" id="li-tab4" href="#tab-4">产品明细管理</a></li>' +
+                    '</ul>' +
+                    '<div class="tab-content">' +
+                        '<div id="tab-1" class="tab-pane active">' +
+                            '<div class="panel-body tab-1">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div id="tab-2" class="tab-pane">' +
+                            '<div class="panel-body tab-2">' +
+                            '</div>' +
+                       '</div>' +
+                        '<div id="tab-3" class="tab-pane">' +
+                            '<div class="panel-body tab-3">' +
+                            '<table style="width:100%" class="table table-striped table-bordered table-hover" id="ProductTable">' +
+                            '<thead>' +
+                            '<tr>' +
+                            '<th>产品代码</th>' +
+                            '<th>产品名称</th>' +
+                            '<th>颜色</th>' +
+                            '<th>尺码</th>' +
+                            '<th>供应商</th>' +
+                            '<th>价格</th>' +
+                            '</tr>' +
+                            '</thead>' +
+                            '</table>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div id="tab-4" class="tab-pane">' +
+                            '<div class="panel-body tab-4">' +
+                            '<table style="width:100%" class="table table-striped table-bordered table-hover" id="ProductDetailTable">' +
+                            '<thead>' +
+                            '<tr>' +
+                            '<th>序号</th>' +
+                            '<th>产品代码</th>' +
+                            '<th>产品名称</th>' +
+                            '<th>颜色</th>' +
+                            '<th>尺码</th>' +
+                            '<th>库存数量</th>' +
+                            '<th>货区</th>' +
+                            '<th>调拨数量</th>' +
+                            '<th>零售价</th>' +
+                            '<th>成本价</th>' +
+                            '<th>供应商</th>' +
+                            '</tr>' +
+                            '</thead>' +
+                            '</table>' +
+                            '</div>' +
+                        '</div>' +
+                      '</div>' +
+                     '</div>';
+
+
+        //add html to dom
+        $('div.DTE_Form_Content').append(html);
+        $('div.modal-dialog').addClass('product-column');
+        //$('div.panel-body.tab-1, div.panel-body.tab-2').addClass('product-column-body');
+        $('div.DTE_Field').addClass('product-column-feild');
+        $('div.DTE_Body.modal-body').css("padding", "0px");
+        $("a#li-tab3,a#li-tab2").css("display", "block");
+        //add editer message form(layout) to header
+        $('.DTE_Form_Info').css({"float":"right","margin":"10px"});
+
+        ////move the editor elements to respective tab
+        $(editor.node(['transfer_number', 'CreationDate', 'Transfer_From_Store_Description','Transfer_To_Store_Description',  'TransferStatus_Description', 'Reason_Code', 'UserName', 'transfer_note'])).appendTo('.tab-1');
+        $(editor.node(['ProductCode', 'ProductName', 'ColorChart', 'SizeChart', 'Supplier', 'ProductType', 'Season', 'Division', 'Department', 'SubDepartment', 'Class', 'RetailPrice', 'CostPrice'])).appendTo('.tab-2');
+
+    };
+    //定义Tabs规则
+    function addtab() {
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            if ($(e.target).length > 0) {
+                var activeTab = $(e.target)[0].id;
+                switch (activeTab) {
+                    //参数设置 Tab1
+                    case 'li-tab1': {
+                        tab1btn()
+                        editor.message('');
+                        break;
+                    }
+                        //产品查询条件 Tab2
+                    case 'li-tab2': {
+                        if (editor.field('Code').val().length > 0) {
+                            editor.buttons([
+                                {
+                                    extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
+                                        //提交条件
+                                        var pnode = ['ProductCode', 'ProductName', 'ColorChart', 'SizeChart', 'Supplier', 'ProductType', 'Season', 'Division', 'Department', 'SubDepartment', 'Class', 'RetailPrice', 'CostPrice'];
+                                        var vnode = [], condition = '', pcondition = '';
+                                        pnode.forEach(function (node) {
+
+                                            if (editor.field(node).val() && editor.field(node).val().length > 0) {
+                                                vnode.push(node);
+                                            }
+                                        });
+
+                                        vnode.forEach(function (node) {
+
+                                            if (vnode.length - 1 > 0) {
+                                                var i = vnode.length - 1;
+                                                if (vnode[i] === node) {
+                                                    condition = condition + node + '=' + "'" + editor.field(node).val() + "'"
+                                                } else {
+                                                    condition = condition + node + '=' + "'" + editor.field(node).val() + "'" + ' and '
+                                                }
+
+                                            } else {
+                                                condition = condition + node + '=' + "'" + editor.field(node).val() + "'"
+                                            }
+
+                                        });
+                                        //测试用
+                                        //console.log(condition);
+                                        var param = {};
+                                        param.token = SecurityManager.generate();
+                                        param.username = SecurityManager.username;
+                                        param.tbName = 'V_Gatewaypayment_SearchProduct';
+                                        param.colName = 'Product_UniqueId, Product_ID, ProductCode, ProductName, Supplier, RetailPrice,PurchasePrice, LandedCost, Bin_Qty_Stocks, Color,Color_ID,Color_UniqueId, Size, Size_ID, Size_UniqueId';
+                                        param.whName = condition;
+                                        $.ajax({
+                                            "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
+                                            "type": "POST",
+                                            "async": true,
+                                            "crossDomain": true,
+                                            "dataType": "json",
+                                            "contentType": "application/json; charset=utf-8",
+                                            "data": JSON.stringify(param),
+                                            "success": function (data) {
+                                                data = data.ResultSets[0]
+
+                                                ptable.clear();//重置产品列表
+                                                pctable.clear().draw();//重置产品明细列表
+                                                data.forEach(function (node) {
+                                                    ptable.row.add(node);
+                                                })
+                                                ptable.draw()
+                                                $('a[href="#tab-3"]').tab('show');
+
+                                            }
+
+
+                                        });
+                                    }
+                                },
+                                {   //重置产品查询条件
+                                    extend: 'tabbtn', label: '重置', className: 'prodbtn', fn: function () {
+                                        var pnode = ['ProductCode', 'ProductName', 'ColorChart', 'SizeChart', 'Supplier', 'ProductType', 'Season', 'Division', 'Department', 'SubDepartment', 'Class', 'RetailPrice', 'CostPrice'];
+                                        pnode.forEach(function (node) {
+                                            if (editor.field(node).val() && editor.field(node).val().length > 0) {
+                                                editor.field(node).set(null);
+                                            }
+                                        })
+
+                                    }
+                                },
+                        ]
+                        )
+                        }
+                        editor.message('');
+                        break;
+                    }
+                        //产品列表 Tab3
+                    case 'li-tab3': {
+                        if (editor.field("Code").val().length > 0) {
+                            editor.buttons([
+                                {
+                                    extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
+                                        if (ptable.rows('.selected', { select: true }).data().length > 0) {
+                                            var plist = ptable.rows('.selected', { select: true }).data();
+                                            pctable.clear();
+                                            for (var i = 0; i < plist.length; i++) {
+                                                plist[i].LineId = i + 1;
+                                                pctable.row.add(plist[i])
+                                                //console.log(index);
+                                            }
+                                            pctable.draw();
+                                            $('a[href="#tab-4"]').tab('show');
+
+                                        }
+
+                                    }
+                                },
+                                {   //重置产品查询条件
+                                    extend: 'tabbtn', label: '重置', className: 'prodbtn', fn: function () {
+                                        var pnode = ['ProductCode', 'ProductName', 'ColorChart', 'SizeChart', 'Supplier', 'ProductType', 'Season', 'Division', 'Department', 'SubDepartment', 'Class', 'RetailPrice', 'CostPrice'];
+                                        pnode.forEach(function (node) {
+                                            if (editor.field(node).val() && editor.field(node).val().length > 0) {
+                                                editor.field(node).set(null);
+                                            }
+                                        })
+                                        $('a[href="#tab-2"]').tab('show');
+
+                                    }
+                                },
+                            ]
+                        )
+                        }
+                        editor.message('');
+                        break;
+                    }
+                        //产品明细调整 Tab 4
+                    case 'li-tab4': {
+                        //$('.DTE_Form_Info').appendTo('#PriceChangeTable_wrapper .col-sm-6:eq(0)');
+                        if (editor.field("transfer_number").val().length > 0 && editor.field('transfer_status').val() === '-1') {
+                            editor.buttons([
+                                {
+                                    extend: 'tabbtn', label: '保存', className: 'pcbtn', fn: function () {
+                                        if (editor.field('transfer_number').val().length > 0 && editor.field('transfer_status').val() !== '-1') {
+                                           return this.blur();
+                                        }
+                                        else if (pcval.length>0) {
+                                            var param = {};
+                                            param.token = SecurityManager.generate();
+                                            param.username = SecurityManager.username;
+                                            param.PCD = pcval;
+                                            $.ajax({
+                                                "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_PORequest_detail",
+                                                "type": "POST",
+                                                "async": true,
+                                                "crossDomain": true,
+                                                "dataType": "json",
+                                                "contentType": "application/json; charset=utf-8",
+                                                "data": JSON.stringify(param),
+                                                "success": function (data) {
+                                                    if (typeof (data.ResultSets[0][0]) !== 'undefined') {
+                                                        data = data.ResultSets[0]
+                                                        pctable.clear();//重置产品明细列表
+                                                        data.forEach(function (node) {
+                                                            pctable.row.add(node);
+                                                        })
+                                                        pctable.draw();
+                                                        editor.message('保存成功').true;
+
+                                                    }
+                                                }
+                                            })
+                                        }
+                                        else {
+                                            editor.message('没有需要保存的数据').true;
+
+                                        }
+
+                                    }
+                                },
+                                {
+                                    extend: 'tabbtn', label: '批准', className: 'pcbtn', fn: function () {
+
+                                        if (editor.field('Code').val().length > 0 && editor.field('ORSCode').val() !== '待确认') {
+                                                this.blur();
+                                            } else {
+                                                var param = {};
+                                                param.token = SecurityManager.generate();
+                                                param.username = SecurityManager.username;
+                                                param.tbName = 'RAMS_OrderRequestStatus '
+                                                param.whName = 'Code=' + '\'' + 'C' + '\'';
+                                                param.colName = 'UniqueId';
+
+                                                //获取OrderRequestStatus 状态为Confirm的UniqueId 
+                                                $.ajax({
+                                                    "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    "type": "POST",
+                                                    "dataType": "json",
+                                                    "contentType": "application/json; charset=utf-8",
+                                                    "data": JSON.stringify(param),
+                                                    "success": function (data) {
+                                                        if (typeof (data.ResultSets[0][0]) !== 'undefined') {
+                                                            //删除table对象
+                                                            delete param.tbName
+                                                            delete param.whName
+                                                            delete param.colName;
+                                                            //添加Confirm状态的ORS UniqueId
+                                                            param.or_status = data.ResultSets[0][0].UniqueId
+                                                            param.code = editor.field('Code').val()
+                                                            param.description = editor.field('Description').val()
+                                                            param.requestdate = editor.field('RequestDate').val()
+                                                            param.creationdate = editor.field('CreationDate').val()
+                                                            param.store = editor.field('Store').val()
+                                                            param.recstore = editor.field('RecStore').val()
+                                                            param.supplier = editor.field('SUName').val()
+                                                            param.season = editor.field('SEName').val()
+                                                            param.po_types = editor.field('PTName').val()
+                                                            param.po_reference = editor.field('PO_Reference').val();
+
+                                                            $.ajax({
+                                                                "url": sysSettings.domainPath + "Gatewaypayment_PORequest_header",
+                                                                "async": true,
+                                                                "crossDomain": true,
+                                                                "type": "POST",
+                                                                "dataType": "json",
+                                                                "contentType": "application/json; charset=utf-8",
+                                                                "data": JSON.stringify(param),
+                                                                "success": function (data) {
+                                                                    if (typeof (data.ResultSets[0][0]) !== 'undefined') {
+                                                                        editor.field('ORSCode').val('已关闭');
+
+                                                                        editor.disable();
+                                                                        $("a#li-tab3,a#li-tab2").css("display", "none")
+                                                                        $('#PriceChangeTable').off('click', 'tbody td.editable');
+                                                                        table.ajax.reload();
+                                                                        table.draw();
+                                                                        //pctable.ajax.reload();
+                                                                        //pctable.draw();
+                                                                        $('a[href="#tab-1"]').tab('show');
+                                                                        editor.message('审批成功').true;
+                                                                        return false;
+                                                                        //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
+                                                                        //table.row('#'+ data.ResultSets[0][0].session_number).remove();
+                                                                        //table.row.add(data.ResultSets[0][0]).draw();
+
+                                                                    }
+                                                                }
+                                                            })
+                                                        }
+                                                    }
+                                                })
+
+                                               
+
+                                                
+
+                                            }
+
+                                    }
+                                },
+                            ])
+                        }
+                        editor.message('');
+                        break;
+                    }
+                }
+            }
+        })
+    };
+
+
+});
+
+
+
+
