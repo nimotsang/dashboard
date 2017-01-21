@@ -14,7 +14,7 @@
             { label: 'transfer_to_store_uniqueid: ', name: 'transfer_to_store_uniqueid', type: 'hidden' },
             { label: 'transfer_type_code: ', name: 'transfer_type', type: 'hidden' },
             { label: 'UniqueId: ', name: 'RecStoreUniqueId', type: 'hidden' },
-            { label: '代码: ', name: 'transfer_number', type:'readonly' },
+            { label: '发货单号: ', name: 'transfer_number', type:'readonly' },
             {
                 label: '创建日期: ', name: 'CreationDate',
                 type: 'datetime',
@@ -54,12 +54,12 @@
 
             "create": {
                 "button": '新增',
-                "title": '新增采购申请',
+                "title": '新增调拨申请',
                 "submit": '提交'
             },
             "edit": {
                 "button": '修改',
-                "title": '采购申请单管理',
+                "title": '调拨申请单管理',
                 "submit": '提交'
             },
             "multi": {
@@ -135,19 +135,24 @@
                     { label: 'PRODUCT_ID: ', name: 'PRODUCT_ID', type: 'hidden' },
                     { label: 'color_ID: ', name: 'color_ID', type: 'hidden' },
                     { label: 'size_ID: ', name: 'size_ID', type: 'hidden' },
+                    { label: 'BinId: ', name: 'BinId', type: 'hidden' },
+                    { label: 'bh_uniqueid: ', name: 'bh_uniqueid', type: 'hidden' },
+                    { label: 'color_uniqueid: ', name: 'color_uniqueid', type: 'hidden' },
+                    { label: 'size_uniqueid: ', name: 'size_uniqueid', type: 'hidden' },
+                    { label: 'product_uniqueid: ', name: 'product_uniqueid', type: 'hidden' },
+                    { label: 'SKU: ', name: 'short_sku', type: 'hidden' },
                     { label: '序号: ', name: 'LineId' },
                     { label: '序号: ', name: 'ProductCode' },
                     { label: '序号: ', name: 'ProductName' },
                     { label: '序号: ', name: 'Color' },
                     { label: '序号: ', name: 'Size' },
-                    { label: '序号: ', name: 'OnHeandQty' },
+                    { label: '序号: ', name: 'BinStockQty' },
+                    { label: '序号: ', name: 'BinCode' },
                     { label: '序号: ', name: 'Qty' },
                     { label: '序号: ', name: 'RetailPrice' },
                     { label: '序号: ', name: 'CostPrice' },
                     { label: '序号: ', name: 'Supplier' },
                 ],
-
-
 
                 ajax: function (method, url, data, success, error) {
                     // NOTE - THIS WILL WORK FOR EDIT ONLY AS IS
@@ -156,24 +161,27 @@
                             data: $.map(data.data, function (val, key) {
                                 val.DT_RowId = key;
                                 var nval = {};
-                                nval.OrderRequestHeader = editor.field('ORHUniqueId').val();
-                                nval.Store = editor.field('Store').val();
-                                nval.RecStore = editor.field('RecStore').val();
-                                nval.Product = val.Product_UniqueId;
-                                nval.Color = val.Color_UniqueId;
-                                nval.Size = val.Size_UniqueId;
-                                nval.Qty = Number(val.Qty);
-                                nval.LineId = Number(val.LineId);
-                                nval.PurchasePrice = Number(val.PurchasePrice);
-                                nval.RetailPrice = Number(val.RetailPrice);
-                                nval.TotalAmount = Number(nval.Qty*nval.PurchasePrice);
-                                nval.OrderRequestStatus = editor.field('ORSUniqueId').val();
-                                nval.OrderRequestType = editor.field('ORTUniqueId').val();
+                                nval.STORE_CODE_ID = val.TRANSFER_FROM_STORE_ID;
+                                nval.TRANSNUM = val.TRANSFER_NUMBER;
+                                nval.SEQUENCE = val.LineId;
+                                nval.SKU = val.short_sku;
+                                nval.QUANTITY = val.Qty;
+                                nval.CESSION_PRICE = val.RetailPrice;
+                                nval.Bin_id = val.BinId;
+                                nval.product_id = val.PRODUCT_ID;
+                                nval.size_id = val.size_ID;
+                                nval.color_id = val.color_ID;
+                                nval.TROD_PriceCost = val.CostPrice;
+                                nval.note = editor.field('transfer_note').val();
+                                nval.BinHeader = val.bh_uniqueid;
+                                nval.Color = val.color_uniqueid;
+                                nval.Product = val.product_uniqueid;
+                                nval.SizeData = val.size_uniqueid;
 
                                 if (pcval.length > 0) {
                                     for (x in pcval) {
-                                        if (pcval[x].Product === nval.Product && pcval[x].Color === nval.Color && pcval[x].Size === nval.Size) {
-                                            if (nval.Qty !== 0) {
+                                        if (pcval[x].Product === nval.Product && pcval[x].Color === nval.Color && pcval[x].SizeData === nval.SizeData) {
+                                            if (nval.QUANTITY !== 0) {
                                                 pcval.splice(x, 1, nval);
                                             } else {
                                                 pcval.splice(x, 1);
@@ -182,14 +190,14 @@
                                         } else if (pcval.length-1>0) {
                                             continue;
                                         } else {
-                                            if (nval.Qty !== 0) {
+                                            if (nval.QUANTITY !== 0) {
                                                 pcval.push(nval);
                                             }
                                         }
                                     }
                                 }
                                 else {
-                                    if (nval.Qty !== 0) {
+                                    if (nval.QUANTITY !== 0) {
                                         pcval.push(nval);
                                     }
                                 }
@@ -476,7 +484,7 @@
                     { label: '序号: ', name: 'Supplier' },
         **/
         $.ajax({
-            "url": sysSettings.domainPath + "rmSP_RAMS_GetTransferSendDetail",
+            "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_GetTransferSendDetail",
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -511,7 +519,7 @@
                 } else {
                     editor.disable();
                     $("a#li-tab3,a#li-tab2").css("display", "none")
-                    $('#PriceChangeTable').off('click', 'tbody td.editable');
+                    $('#ProductDetailTable').off('click', 'tbody td.editable');
                 }
 
             }
@@ -653,7 +661,7 @@
         editor.buttons([
        {
            label: '保存', className: 'btn btn-primary', fn: function () {
-               if (editor.field('Code').val().length > 0 && editor.field('ORSCode').val() !== '待确认') {
+               if (editor.field("transfer_status").val() !== "-1" || editor.field("transfer_status").val() !== "保存") {
                    this.blur();
                } else {
                    var param = {};
@@ -792,7 +800,7 @@
                     }
                         //产品查询条件 Tab2
                     case 'li-tab2': {
-                        if (editor.field('Code').val().length > 0) {
+                        if (editor.field('transfer_number').val().length > 0 && editor.field('transfer_status').val() === '-1') {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
@@ -873,7 +881,7 @@
                     }
                         //产品列表 Tab3
                     case 'li-tab3': {
-                        if (editor.field("Code").val().length > 0) {
+                        if (editor.field("transfer_number").val().length > 0 && editor.field('transfer_status').val() === '-1') {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
@@ -912,7 +920,7 @@
                     }
                         //产品明细调整 Tab 4
                     case 'li-tab4': {
-                        //$('.DTE_Form_Info').appendTo('#PriceChangeTable_wrapper .col-sm-6:eq(0)');
+                        //$('.DTE_Form_Info').appendTo('#ProductDetailTable_wrapper .col-sm-6:eq(0)');
                         if (editor.field("transfer_number").val().length > 0 && editor.field('transfer_status').val() === '-1') {
                             editor.buttons([
                                 {
@@ -957,7 +965,7 @@
                                 {
                                     extend: 'tabbtn', label: '批准', className: 'pcbtn', fn: function () {
 
-                                        if (editor.field('Code').val().length > 0 && editor.field('ORSCode').val() !== '待确认') {
+                                        if (editor.field('transfer_number').val().length > 0 && editor.field('transfer_status').val() === '-1') {
                                                 this.blur();
                                             } else {
                                                 var param = {};
@@ -1009,7 +1017,7 @@
 
                                                                         editor.disable();
                                                                         $("a#li-tab3,a#li-tab2").css("display", "none")
-                                                                        $('#PriceChangeTable').off('click', 'tbody td.editable');
+                                                                        $('#ProductDetailTable').off('click', 'tbody td.editable');
                                                                         table.ajax.reload();
                                                                         table.draw();
                                                                         //pctable.ajax.reload();

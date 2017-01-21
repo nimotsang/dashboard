@@ -15,7 +15,7 @@
             { label: 'PTUniqueId: ', name: 'PTUniqueId', type: 'hidden' },
             { label: 'SUUniqueId: ', name: 'SUUniqueId', type: 'hidden' },
             { label: 'STUniqueId: ', name: 'STUniqueId', type: 'hidden' },
-            { label: '代码: ', name: 'Code', type:'readonly' },
+            { label: '申请单号: ', name: 'Code', type:'readonly' },
             { label: '描述: ', name: 'Description' },
             {
                 label: '创建日期: ', name: 'CreationDate',
