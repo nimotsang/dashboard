@@ -233,26 +233,6 @@
         //搜索条件下拉框
         getproductlist(e, data);
 
-        /**
-                        fields: [
-                    { label: 'TRANSFER_FROM_STORE_ID: ', name: 'TRANSFER_FROM_STORE_ID', type: 'hidden' },
-                    { label: 'TRANSFER_TO_STORE_ID: ', name: 'TRANSFER_TO_STORE_ID', type: 'hidden' },
-                    { label: 'REASON_ID: ', name: 'REASON_ID', type: 'hidden' },
-                    { label: 'TRANSFER_NUMBER: ', name: 'TRANSFER_NUMBER', type: 'hidden' },
-                    { label: 'PRODUCT_ID: ', name: 'PRODUCT_ID', type: 'hidden' },
-                    { label: 'color_ID: ', name: 'color_ID', type: 'hidden' },
-                    { label: 'size_ID: ', name: 'size_ID', type: 'hidden' },
-                    { label: '序号: ', name: 'LineId' },
-                    { label: '序号: ', name: 'ProductCode' },
-                    { label: '序号: ', name: 'ProductName' },
-                    { label: '序号: ', name: 'Color' },
-                    { label: '序号: ', name: 'Size' },
-                    { label: '序号: ', name: 'OnHeandQty' },
-                    { label: '序号: ', name: 'Qty' },
-                    { label: '序号: ', name: 'RetailPrice' },
-                    { label: '序号: ', name: 'CostPrice' },
-                    { label: '序号: ', name: 'Supplier' },
-        **/
         var param = {};
         param.token = SecurityManager.generate();
         param.username = SecurityManager.username;
@@ -978,7 +958,6 @@
                 editor.field("Transfer_From_Store_Description").update(selectStore)
                 editor.field("Transfer_To_Store_Description").update(selectRecStore)
                 editor.field("transfer_to_store_id").val(Number(editor.field("Transfer_To_Store_Description").val()))
-                editor.field("Transfer_From_Store_Description").update(selectStore)
                 editor.field("transfer_from_store_id").val(Number(editor.field("Transfer_From_Store_Description").val()))
                 
             }
