@@ -394,7 +394,7 @@
 
         initComplete: function () {
             table.buttons().container().appendTo('#TransferReceiveTable_wrapper .col-sm-6:eq(0)');
-            getreceivinglist('0');
+            getreceivinglist('3','0');
 
         },
         buttons: [
@@ -424,17 +424,17 @@
         buttons: [
                 {
                     text: '待收货确认', action: function (e, dt, node, config) {
-                        getreceivinglist('0');
+                        getreceivinglist('3','0');
                     }
                 },
                 {
                     text: '待确认', action: function (e, dt, node, config) {
-                        getreceivinglist('1');
+                        getreceivinglist('3','1');
                     }
                 },
                 {
                     text: '已确认', action: function (e, dt, node, config) {
-                        getreceivinglist('2');
+                        getreceivinglist('5','2');
                     }
                 },
         ]
@@ -498,7 +498,7 @@
                        "data": JSON.stringify(param),
                        "success": function (data) {
                            if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                               getreceivinglist('0');
+                               getreceivinglist('3','0');
                                editor.field('tch_id').val(data.ResultSets[0][0]["tch_id"]);
                                editor.field('Tch_status').val(data.ResultSets[0][0]["Tch_status"]);
                                editor.field('ReceptionStatus_Description').val('待确认');
@@ -727,46 +727,7 @@
                         if (editor.field("tch_id").val().length > 0 && editor.field('Tch_status').val() !== 'Confirmed') {
                             editor.buttons([
                                 {
-                                    extend: 'tabbtn', label: '保存', className: 'pcbtn', fn: function () {
-                                        if (editor.field('tch_id').val().length > 0 && editor.field('Tch_status').val() !== 'Edit') {
-                                           return this.blur();
-                                        }
-                                        else if (pcval.length>0) {
-                                            var param = {};
-                                            param.token = SecurityManager.generate();
-                                            param.username = SecurityManager.username;
-                                            param.PCD = pcval;
-                                            $.ajax({
-                                                "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_RM_detail",
-                                                "type": "POST",
-                                                "async": true,
-                                                "crossDomain": true,
-                                                "dataType": "json",
-                                                "contentType": "application/json; charset=utf-8",
-                                                "data": JSON.stringify(param),
-                                                "success": function (data) {
-                                                    if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                                                        data = data.ResultSets[0]
-                                                        pctable.clear();//重置产品明细列表
-                                                        data.forEach(function (node) {
-                                                            pctable.row.add(node);
-                                                        })
-                                                        pctable.draw();
-                                                        editor.message('保存成功').true;
-
-                                                    }
-                                                }
-                                            })
-                                        }
-                                        else {
-                                            editor.message('没有修改的数据需要保存').true;
-
-                                        }
-
-                                    }
-                                },
-                                {
-                                    extend: 'tabbtn', label: '批准', className: 'pcbtn', fn: function () {
+                                    extend: 'tabbtn', label: '批准', className: 'btn btn-primary', fn: function () {
 
                                         if (editor.field('tch_id').val().length > 0 && editor.field('Tch_status').val() !== 'Edit') {
                                                 this.blur();
@@ -793,7 +754,7 @@
                                                 "data": JSON.stringify(param),
                                                 "success": function (data) {
                                                     if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                                                        getreceivinglist('0');
+                                                        getreceivinglist('5','2');
                                                         editor.field('tch_id').val(data.ResultSets[0][0]["tch_id"]);
                                                         editor.field('Tch_status').val(data.ResultSets[0][0]["Tch_status"]);
                                                         editor.field('ReceptionStatus_Description').val('已确认');
@@ -808,6 +769,7 @@
 
                                     }
                                 },
+                            { label: '取消', fn: function () { this.blur(); } },
                             ])
                         }
                         editor.message('');
@@ -992,8 +954,8 @@
             editor.field("ReceptionStatus_Description").val('已确认')
         }
     }
-    function getreceivinglist(status) {
-        var filter = "TransactionStoreGrid" + "<" + "1000014" + ">" + "," + "TransactionStatus" + "<" + "5" + ">" + "," + "TransactionReceiveStatus" + "<" + status + ">"
+    function getreceivinglist(tcstatus, trstatus) {
+        var filter = "TransactionStoreGrid" + "<" + "1000014" + ">" + "," + "TransactionStatus" + "<" + tcstatus + ">" + "," + "TransactionReceiveStatus" + "<" + trstatus + ">"
         var param = {
             "token": SecurityManager.generate(),
             "username": SecurityManager.username,
