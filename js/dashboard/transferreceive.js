@@ -394,6 +394,11 @@
 
         initComplete: function () {
             table.buttons().container().appendTo('#TransferReceiveTable_wrapper .col-sm-6:eq(0)');
+            var storelist='<select multiple="multiple">'+
+                           '<option>1</option>'+
+                            '<option>2</option>'+
+                            '</select>'
+            table.buttons().container().appendTo(storelist);
             getreceivinglist('3','0');
 
         },
