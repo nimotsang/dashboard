@@ -1,6 +1,6 @@
 ﻿// DB Web API Server 
 var sysSettings ={
-    "domainPath": "http://desktop-jj3slrc/mocdbapi/"
+    "domainPath": "http://neil-pc/mocdbapi/"
 	//"domainPath": "http://desktop-idhm2sh/mocdbapi/"
     //"domainPath": "https://dev.mbeta.pw/mocdbapi/"
 };

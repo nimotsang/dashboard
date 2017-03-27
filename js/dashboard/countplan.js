@@ -290,11 +290,14 @@
     editor.on('initCreate', function (e) {
         
         getproductlist(e);
-
+        if (editor.field('InventSchedule_Type').val() === "部分盘点")
+            alert('sss');
 
     });
     //修改数据
     editor.on('initEdit', function (e, node, data) {
+
+
         //搜索条件下拉框
         getproductlist(e, data);
 
