@@ -156,9 +156,9 @@
             //增加HTML
             addhtml();
             //增加tab1按键
-            tab1btn();
+            tab1btn(e, mode, action);
             //定义Tabs规则
-            addtab();
+            addtab(e, mode, action);
 
             //初始化报表-产品列表
             ptable = $("#ProductTable").DataTable({
@@ -290,7 +290,6 @@
     editor.on('initCreate', function (e) {
         
         getproductlist(e);
-        editor.enable();
 
 
     });
@@ -502,11 +501,11 @@
 
     }
     //定义 Tab1 按键
-    function tab1btn() {
+    function tab1btn(e, mode, action) {
         editor.buttons([
        {
            label: '保存', className: 'btn btn-primary', fn: function () {
-               if (editor.field("approved").val() !== ("未确认" || "新建")) {
+               if (editor.field("InventScheduleStatus_Code").val() === ("计划" || "冻结" || "取消" || "完成")) {
                    this.blur();
                } else {
                    var param = {};
@@ -528,14 +527,20 @@
                        "data": JSON.stringify(param),
                        "success": function (data) {
                            if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                               table.ajax.reload().draw();
-                               editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"]);
-                               editor.field('ref_Session_Id').val(data.ResultSets[0][0]["ref_Session_Id"]);
+                               if (editor.field('InventSchedule_Id').val() === null) {
+                                   data.ResultSets[0][0].Id = table.rows()[0].length + 1;
+                                   data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
+                                   data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
+                                   table.row.add(data.ResultSets[0][0]).draw();
+                                   editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
+
+                               }
+
+                               if (data.ResultSets[0][0]["Session_Id"] !== null) {
+                                   editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"])
+                               }
                                editor.message('保存成功').true;
                                return false;
-                               //ptable.buttons.info('Notification', 'This is a notification message!', 3000);
-                               //table.row('#'+ data.ResultSets[0][0].session_number).remove();
-                               //table.row.add(data.ResultSets[0][0]).draw();
 
                            }
                            }
@@ -624,7 +629,7 @@
 
     };
     //定义Tabs规则
-    function addtab() {
+    function addtab(e, mode, action) {
         $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
             if ($(e.target).length > 0) {
                 var activeTab = $(e.target)[0].id;
@@ -907,15 +912,19 @@
     function getproductlist(e,data) {
         var exdata = [];
         var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
-        var selectStore = [], selectRecStore = [], selectReason = []
+        var selectStore = [], selectType = [], selectReason = []
         var param = {};
         param.token = SecurityManager.generate();
         param.username = SecurityManager.username;
         // Get existing options
         if (e.type === 'initEdit') {
             exdata = data
+            if (exdata.InventScheduleStatus_Code !== '保存') {
+                editor.disable();
+            }
         } else if (e.type === 'initCreate') {
             editor.field("InventScheduleStatus_Code").val('新建')
+            editor.enable();
         }
         $.ajax({
             "url": sysSettings.domainPath + "RaymSP_GatewayPaymentProduct_Get",
@@ -965,6 +974,17 @@
                 editor.field("SizeChart").update(selectSizeChart)
                 editor.field("ProductType").update(selectProductType)
                 editor.field("Season").update(selectSeason)
+                if (typeof (exdata.InventSchedule_Type) !== 'undefined') {
+                    if (exdata.InventSchedule_Type === '部分盘点') {
+                        selectType.push({ label: '部分盘点', value: 'P' });
+                        selectType.push({ label: '全部盘点', value: 'T' });
+                    } else if (exdata.InventSchedule_Type === '全部盘点') {
+                        selectType.push({ label: '全部盘点', value: 'T' });
+                        selectType.push({ label: '部分盘点', value: 'P' });
+                    }
+                    editor.field('InventSchedule_Type').update(selectType);
+                }
+
                 //门店列表
                 editor.field("Store_Code").update(selectStore)
                 editor.field("Store_Code_Id").val(Number(editor.field("Store_Code").val()))

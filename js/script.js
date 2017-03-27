@@ -38,7 +38,7 @@ $(document).ready(function () {
             type: "POST",
             "async": true,
             "crossDomain": true,
-            "url": sysSettings.domainPath + "/RaymSP_GatewayPaymentLogin/",
+            "url": sysSettings.domainPath + "RaymSP_GatewayPaymentLogin/",
             "dataType": "json",
             "contentType": "application/json; charset=utf-8",
             "data": JSON.stringify(param),
