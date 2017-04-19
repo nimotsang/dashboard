@@ -21,32 +21,201 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="page-header">价格管理</h1>
+                    <button class="btn btn-primary" id="mdsz" data-toggle="modal" data-target="#store" style="position:absolute;top:30%;left:50%">门店选择</button>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
             <!-- /.row -->
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            价格信息管理
+                   
+
+                        <div class="modal fade " id="store" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+                            <div class="modal-dialog ">
+
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title" id="myModalLabel">门店选择</h4>
+
+                                    </div>
+                                    <div class="modal-body">
+                                        <select id="choose" class="" style="width: 90%;border: 2px solid #000000;border-radius:15px;-moz-border-radius: 15px; -webkit-border-radius: 15px;  /* Safari */"></select>
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" id="store_yes" data-dismiss="modal">确定</button>
+
+                                </div><!-- /.modal-content -->
+
+                            </div><!-- /.modal -->
+
                         </div>
-                        <!-- /.panel-heading -->
-                        <div class="panel-body">
-                            <table style="width:100%" class="table table-striped table-bordered table-hover" id="PriceTable">
-                                <thead>
-                                    <tr>
-                                        <th>序号</th>                                        
-                                        <th>描述</th>
-                                        <th>类型</th>
-                                        <th>状态</th>
-                                        <th>开始日期</th>
-                                        <th>结束日期</th>
-                                        <th>门店名称</th>
-                                        <th>级别名称</th>
-                                    </tr>
-                                </thead>                          
-                            </table>
+
+                   
+                    <!-- /.panel-heading -->
+                    <div class="panel-body">
+
+                        <div id="price">
+
+                            <fieldset class="setting">
+                                
+                                <div class="app">
+                                    <editor-field name="session_number"></editor-field>
+                                    <editor-field name="description"></editor-field>
+                                    <editor-field name="session_type"></editor-field>
+                                    <editor-field name="session_status"></editor-field>
+                                    <editor-field name="start_date"></editor-field>
+                                    <editor-field name="end_date"></editor-field>
+                                    <editor-field name="store_name"></editor-field>
+                                    <editor-field name="grid_name"></editor-field>
+                                </div>
+                                <div class="atab">
+
+
+                                    <button class="btn btn-primary cpss" data-toggle="modal" data-target="#sousuo">产品搜索</button>
+                                    <button class="btn btn-primary cplb" data-toggle="modal" data-target="#list">产品列表</button>
+                                </div>
+                                <div class="overlay">
+                                    <div class="modal fade " id="sousuo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+                                        <div class="modal-dialog ">
+
+                                            <div class="modal-content">
+
+                                                <div class="modal-header">
+
+                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                    <h4 class="modal-title" id="myModalLabel">新增价格调整</h4>
+
+                                                </div>
+                                                <div class="modal-body">
+                                                    <button class="btn btn-link active" disabled="disabled" data-toggle="modal" data-target="#sousuo">产品搜索</button>
+                                                    <button class="btn btn-link" data-toggle="modal" data-dismiss="modal" data-target="#list">产品列表</button>
+                                                    <div class="panel-body tab-2">
+                                                    </div>
+
+                                                </div>
+                                                <div class="modal-footer">
+
+                                                    <button type="button" class="btn btn-default" id="re">重置</button>
+                                                    <button type="button" class="btn btn-default" id="yes" data-dismiss="modal">确定</button>
+
+                                                </div><!-- /.modal-content -->
+
+                                            </div><!-- /.modal -->
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal fade" id="list" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+
+                                        <div class="modal-dialog">
+
+                                            <div class="modal-content">
+
+                                                <div class="modal-header">
+
+                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                    <h4 class="modal-title" id="myModalLabel1">新增价格调整</h4>
+
+                                                </div>
+                                                <div class="modal-body">
+                                                    <button class="btn btn-link" data-toggle="modal" data-dismiss="modal" data-target="#sousuo">产品搜索</button>
+                                                    <button class="btn btn-link active" disabled="disabled" data-toggle="modal" data-target="#list">产品列表</button>
+                                                    <div class="panel-body tab-3">
+
+                                                        <table style="width:100%" class="table table-striped table-bordered table-hover" id="ProductTable">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>产品代码</th>
+                                                                    <th>产品名称</th>
+                                                                    <th>颜色</th>
+                                                                    <th>尺码</th>
+                                                                    <th>供应商</th>
+                                                                    <th>价格</th>
+                                                                </tr>
+                                                            </thead>
+
+
+                                                        </table>
+
+
+                                                    </div>
+
+                                                </div>
+                                                <div class="modal-footer">
+
+                                                    <button type="button" class="btn btn-default" id="yes1" data-dismiss="modal">确定</button>
+                                                    <button type="button" class="btn btn-default" id="re1" data-dismiss="modal">重置</button>
+
+                                                </div>
+
+                                            </div><!-- /.modal-content -->
+
+                                        </div><!-- /.modal -->
+
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="productsearch">
+
+                              
+
+                                <table style="width:100%" class="table table-striped table-bordered table-hover " id="PriceChangeTable">
+
+                                    <thead>
+                                        <tr>
+
+
+                                            <th>序号</th>
+
+                                            <th>产品代码</th>
+
+                                            <th>产品名称</th>
+
+                                            <th>颜色代码</th>
+
+                                            <th>尺码代码</th>
+
+                                            <th>新价格</th>
+
+                                            <th>当前价格</th>
+                                            <th>成本</th>
+                                        </tr>
+
+                                    </thead>
+                                </table>
+
+                            </fieldset>
+                        </div>
+                        <div class="sp">
+
+                            <div class="search_suggest" id="search_suggest" style="display:none;">
+                                <ul></ul>
+                            </div>
+                        </div>
+                        <div class="hidemessage" style="display:none;width:auto;top:45%;left:45%;font-size:40px; position:absolute; z-index:10 ">保存成功</div>
+                        <table style="width:100%" class="table table-striped table-bordered table-hover" id="PriceTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>描述</th>
+                                    <th>类型</th>
+                                    <th>状态</th>
+                                    <th>开始日期</th>
+                                    <th>结束日期</th>
+                                    <th>门店名称</th>
+                                    <th>级别名称</th>
+                                </tr>
+                            </thead>
+                        </table>
                         <!-- /.panel-body -->
                     </div>
                     <!-- /.panel -->
@@ -57,7 +226,6 @@
 
         </div>
         <!-- /#page-wrapper -->
-
     </div>
     </div>
     <!-- /#wrapper -->
@@ -65,6 +233,7 @@
     <script src="../js/common/sysSettings.js"></script>
     <script src="../js/common/moment.min.js"></script>
     <script src="../js/dashboard/price.js"></script>
+
 </body>
 
 </html>

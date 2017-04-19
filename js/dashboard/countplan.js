@@ -1,4 +1,5 @@
 ﻿$(document).ready(function () {
+    
     //新增及修改调整
     var editor = new $.fn.dataTable.Editor({
 
@@ -290,14 +291,22 @@
     editor.on('initCreate', function (e) {
         
         getproductlist(e);
-        if (editor.field('InventSchedule_Type').val() === "部分盘点")
-            alert('sss');
+        
 
     });
+
+
+    
     //修改数据
     editor.on('initEdit', function (e, node, data) {
-
-
+        if (editor.field("InventScheduleStatus_Code").val() === ("计划" || "冻结" || "取消" || "完成")) {
+            editor.disable();
+        } else {
+            editor.enable();
+        }
+        if (editor.field("InventScheduleStatus_Code").val() === "冻结") {
+            
+        }
         //搜索条件下拉框
         getproductlist(e, data);
 
@@ -353,13 +362,18 @@
         editor.field("Store_Code_Id").val(Number(val));
 
     }, { event: 'change' });
+
+
+
+
     //初始化产品报表
     table = $("#CountPlanTable").DataTable({
         processing: false,
         //dom: 'Bfrtip',
         lengthChange: false,
         select: true,
-        order: [[0, "asc"]],
+        "bStateSave": true,//记住当前位置
+        order: [[1, "desc"]],
         columns: [
         { "data": "Id"},
         { "data": "InventSchedule_Id" },
@@ -494,6 +508,7 @@
                     data[i].Store_Code = data[i].store_code;
                 }
                 table.clear().draw();
+                
                 data.forEach(function (node) {
                     table.row.add(node);
                 })
@@ -503,23 +518,35 @@
         });
 
     }
+    
     //定义 Tab1 按键
     function tab1btn(e, mode, action) {
+        var a;
         editor.buttons([
        {
-           label: '保存', className: 'btn btn-primary', fn: function () {
+           label: '保存', className: 'btn btn-primary syldqr', fn: function () {
                if (editor.field("InventScheduleStatus_Code").val() === ("计划" || "冻结" || "取消" || "完成")) {
                    this.blur();
-               } else {
-                   var param = {};
+                   
+               }
+               else if (editor.field("InventScheduleStatus_Code").val() === "保存" && editor.field("InventSchedule_Type").val()==="T") {
+                   
+                   editor.disable();
+                   $('.syldqr').html('确认');
+                   editor.field("InventScheduleStatus_Code").val('冻结');
+                   $('.syldqr').click(function () {
+                       var param = {};
                    param.token = SecurityManager.generate();
                    param.username = SecurityManager.username;
-                   param.inventschedule_id = editor.field('InventSchedule_Id').val() ? Number(editor.field('InventSchedule_Id').val()) : null,
+                   param.inventschedule_id = editor.field('InventSchedule_Id').val() ? editor.field('InventSchedule_Id').val() : null,
                    param.store_code_id = editor.field('Store_Code_Id').val(),
                    param.count_number = 1,
+
                    param.inventschedule_date = editor.field('InventSchedule_Date').val(),
-                   param.inventschedulestatus_id = 1,
-                   param.inventschedule_type = editor.field('InventSchedule_Type').val()
+                   param.inventschedulestatus_id = 3,
+                   param.inventschedule_type = editor.field('InventSchedule_Type').val(),
+                   param.inventschedulestatus_code = editor.field('InventScheduleStatus_Code').val()
+
                    $.ajax({
                        "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_InventSchedule",
                        "async": true,
@@ -529,33 +556,182 @@
                        "contentType": "application/json; charset=utf-8",
                        "data": JSON.stringify(param),
                        "success": function (data) {
+                           //table.ajax.reload();
                            if (typeof (data.ResultSets[0][0]) !== 'undefined') {
                                if (editor.field('InventSchedule_Id').val() === null) {
+
+                                   //table.row.add(data.ResultSets[0][0]).draw();
+                                   table.draw();
                                    data.ResultSets[0][0].Id = table.rows()[0].length + 1;
+                                   data.ResultSets[0][0].InventScheduleStatus_Id = 2;
                                    data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
                                    data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
-                                   table.row.add(data.ResultSets[0][0]).draw();
-                                   editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
+
+                                   //editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
 
                                }
 
-                               if (data.ResultSets[0][0]["Session_Id"] !== null) {
-                                   editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"])
+                               else if (editor.field('Session_Id').val() === null) {
+
+
                                }
+                               editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"]);
+                               editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
+
+                               a = data.ResultSets[0][0]["InventSchedule_Id"];
+                               //editor.disable();
                                editor.message('保存成功').true;
+
                                return false;
 
                            }
+
+                       }
+                   })
+                   });
+                   
+                 
+               }
+               
+                   
+               else {
+                   var param = {};
+                   param.token = SecurityManager.generate();
+                   param.username = SecurityManager.username;
+                   param.inventschedule_id = editor.field('InventSchedule_Id').val() ? editor.field('InventSchedule_Id').val() : null,
+                   param.store_code_id = editor.field('Store_Code_Id').val(),
+                   param.count_number = 1,
+
+                   param.inventschedule_date = editor.field('InventSchedule_Date').val(),
+                   param.inventschedulestatus_id = 1,
+                   param.inventschedule_type = editor.field('InventSchedule_Type').val(),
+                   param.inventschedulestatus_code = editor.field('InventScheduleStatus_Code').val()
+
+                   $.ajax({
+                       "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_InventSchedule",
+                       "async": true,
+                       "crossDomain": true,
+                       "type": "POST",
+                       "dataType": "json",
+                       "contentType": "application/json; charset=utf-8",
+                       "data": JSON.stringify(param),
+                       "success": function (data) {
+                           //table.ajax.reload();
+                           if (typeof (data.ResultSets[0][0]) !== 'undefined') {
+                               if (editor.field('InventSchedule_Id').val() === null) {
+
+                                   //table.row.add(data.ResultSets[0][0]).draw();
+                                   table.draw();
+                                   data.ResultSets[0][0].Id = table.rows()[0].length + 1;
+                                   data.ResultSets[0][0].InventScheduleStatus_Id = 2;
+                                   data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
+                                   data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
+
+                                   //editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
+
+                               }
+
+                               else if (editor.field('Session_Id').val() === null) {
+
+
+                               }
+                               editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"]);
+                               editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
+
+                               a = data.ResultSets[0][0]["InventSchedule_Id"];
+                               //editor.disable();
+                               editor.message('保存成功').true;
+
+                               return false;
+
                            }
+
+                       }
                    })
 
+                   $('.syldqr').html('确认');
+                   $('.syldqr').click(function () {
+                       var param = {};
+                       param.token = SecurityManager.generate();
+                       param.username = SecurityManager.username;
+                       param.inventschedule_id = editor.field('InventSchedule_Id').val() ? editor.field('InventSchedule_Id').val() : null,
+                       param.store_code_id = editor.field('Store_Code_Id').val(),
+                       param.count_number = 1,
+
+                       param.inventschedule_date = editor.field('InventSchedule_Date').val(),
+                       param.inventschedulestatus_id = 2,
+                       param.inventschedule_type = editor.field('InventSchedule_Type').val(),
+                       param.inventschedulestatus_code = editor.field('InventScheduleStatus_Code').val()
+
+                       $.ajax({
+                           "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_InventSchedule",
+                           "async": true,
+                           "crossDomain": true,
+                           "type": "POST",
+                           "dataType": "json",
+                           "contentType": "application/json; charset=utf-8",
+                           "data": JSON.stringify(param),
+                           "success": function (data) {
+                               //table.ajax.reload();
+                               if (typeof (data.ResultSets[0][0]) !== 'undefined') {
+                                   if (editor.field('InventSchedule_Id').val() === null) {
+
+                                       //table.row.add(data.ResultSets[0][0]).draw();
+                                       table.draw();
+                                       data.ResultSets[0][0].Id = table.rows()[0].length + 1;
+                                       data.ResultSets[0][0].InventScheduleStatus_Id = 2;
+                                       data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
+                                       data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
+
+                                       //editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
+
+                                   }
+
+                                   else if (editor.field('Session_Id').val() === null) {
+
+
+                                   }
+                                   editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"]);
+                                   editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
+
+                                   a = data.ResultSets[0][0]["InventSchedule_Id"];
+                                   //editor.disable();
+                                   editor.message('保存成功').true;
+
+                                   return false;
+
+                               }
+
+                           }
+                       })
+
+                   });
+                  
                }
 
            }
        },
-      { label: '取消', fn: function () { this.blur(); } }
+      {
+          label: '取消', fn: function () {
+              this.blur(); /*table.data().InventSchedule_Id
+              
+              table
+            .columns(1).row(a)
+            .select();
+              alert(a);*/
+              //window.location.reload();
+              initialtable();
+          }
+      }
         ])
     };
+
+
+        
+
+
+
+
     //定义HTML Tab
     function addhtml() {
         /** 创建 产品Tabs (搜索条件，列表及产品调整明细) **/
@@ -910,23 +1086,29 @@
             }
         })
     };
-
+   
     //获得产品清单
     function getproductlist(e,data) {
         var exdata = [];
         var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
         var selectStore = [], selectType = [], selectReason = []
         var param = {};
+        
         param.token = SecurityManager.generate();
         param.username = SecurityManager.username;
         // Get existing options
         if (e.type === 'initEdit') {
+            
             exdata = data
+
             if (exdata.InventScheduleStatus_Code !== '保存') {
+               
                 editor.disable();
+
             }
         } else if (e.type === 'initCreate') {
-            editor.field("InventScheduleStatus_Code").val('新建')
+            
+            editor.field("InventScheduleStatus_Code").val('新建');
             editor.enable();
         }
         $.ajax({
@@ -938,6 +1120,7 @@
             "contentType": "application/json; charset=utf-8",
             "data": JSON.stringify(param),
             "success": function (data) {
+                
                 data = data.ResultSets[0]
                 for (var item in data) {
                     switch (data[item].table) {
@@ -1004,7 +1187,7 @@
         }
         var nval = {};
         nval.Session_Id = val.Session_Id;
-        nval.line_id = Number(val.Line_Id);
+        nval.line_id = Number(val.Line_Id);;
         nval.product_id = val.product_id;
         nval.color_id = Number(val.color_id);
         nval.size_id = val.size_id;
@@ -1051,6 +1234,17 @@
         pctable.draw();
         return val;
     }
+
+
+
+
+
+   
+
+
+
+
+
 });
 
 

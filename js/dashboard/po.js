@@ -396,8 +396,11 @@
 
 
     });
+   
     //修改数据
     editor.on('initEdit', function (e, node, data) {
+        
+
         //搜索条件下拉框
         var exdata = [];
         var selectColorChart = [], selectSizeChart = [], selectLiftCycle = [], selectSupplier = [], selectProductType = [], selectSeason = [], selectDevision = [], selectDepartment = [], selectClass = [], selectKnowHow = [];
@@ -715,7 +718,7 @@
     function tab1btn() {
         editor.buttons([
        {
-           label: '保存', className: 'btn btn-primary', fn: function () {
+           label: '保存', className: 'btn btn-primary syldqr', fn: function () {
                if (editor.field('Code').val().length > 0 && editor.field('ORSCode').val() !== '待确认') {
                    this.blur();
                } else {

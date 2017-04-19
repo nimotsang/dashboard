@@ -1,7 +1,14 @@
-﻿body,button, input, select, textarea,h1 ,h2, h3, h4, h5, h6 { font-family: Microsoft YaHei,'宋体' , Tahoma, Helvetica, Arial, "\5b8b\4f53", sans-serif;}
+﻿
+body,button, input, select, textarea,h1 ,h2, h3, h4, h5, h6 { font-family: Microsoft YaHei,'宋体' , Tahoma, Helvetica, Arial, "\5b8b\4f53", sans-serif;}
 
-
-
+.page-wrapper{
+    width:100%;
+    position:absolute;
+}
+/*取消抖动，固定body大小使modal打开后不会有padding-right出现*/
+body{
+    padding-right: 0px !important;
+}
 /* 单元格连续纯字母数字强制换行显示 */
 .wordwrap{
     word-wrap: break-word;
@@ -14,6 +21,34 @@
     overflow: hidden;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
+}
+
+/*表格样式*/ 
+ fieldset {
+    flex: 1;
+    border: 1px solid #aaa;
+    margin: 0.5em;
+}
+ 
+ fieldset legend {
+    padding: 5px 20px;
+    border: 1px solid #aaa;
+    font-weight: bold;
+}
+ 
+ fieldset.setting {
+    flex: 2 100%;
+}
+ 
+ fieldset.setting legend {
+    background: #bfffbf;
+}
+ 
+ fieldset.productsearch legend {
+    background: #ffffbf;
+}
+ div.DTE_Field {
+    padding: 5px;
 }
 
 
@@ -41,20 +76,82 @@ div.multi-column-feild {
     -moz-box-sizing:border-box; /* Firefox */
     -webkit-box-sizing:border-box; /* Safari */
 }
- 
+
+div.DTE_Footer,modal-footer{
+    text-indent: -1px;
+    position: absolute  ;
+    bottom: -10%;
+    right:5%;
+    z-index: 1;
+    border-top-width: 0px;
+}
+
+div.panel-body{
+    height:inherit;
+    overflow:auto;
+}
+.tab-2,.tab-3{
+    width:100%;
+}
+    /*表格宽度固定*/
+th{
+    width:12.5%;
+}
+
+div.atab{
+    
+    position: relative!important;
+    left: 60%!important;
+    width: 30%!important;
+    bottom: 0px!important;
+}
+button.closebtn{
+    position:absolute;
+    height: 25px;
+    width: 25px;
+    right: 5%!important;
+    top: 3%;
+    align-content:center;
+}
+
 div.multi-column-feild:after {
-    content: ' ';
+    
     display: block;
     clear: both;
 }
-
-
+input,select{
+    width:60%;
+    z-index:1;
+     position: relative
+}
+.table-bordered > tbody > tr > td, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > td, .table-bordered > tfoot > tr > th, .table-bordered > thead > tr > td, .table-bordered > thead > tr > th {
+    border: 0px;
+    font-size: 10px;
+}
+.btn {
+    border: solid;
+    padding: 0px 20px 0px 20px;
+    background-color: rgb(0, 160, 233);
+    height: 32px;
+    color: #fff;
+    border-radius: 0;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857;
+    margin-bottom: 0px;
+    text-align: center;
+    vertical-align: middle; 
+    white-space: nowrap;
+}
 div.product-column {
 
     width: 75%;
     height:auto;
     position:relative;
 }
+
 
 div.product-column-body{
 
@@ -73,13 +170,19 @@ div.product-column-feild {
     -webkit-box-sizing:border-box; /* Safari */
 }
  
-div.product-column-feild:after {
-    content: ' ';
-    display: block;
-    clear: both;
-}
+
 /* FOr Editor Field Inline Mode*/
 td.editable {
         font-weight: bold;
         width:10%;
     }
+
+.textcolor {
+    color:red;
+}
+.sorting_1 {
+background-color:darkgrey;
+}
+thead {
+    background-color:#808080;
+}
