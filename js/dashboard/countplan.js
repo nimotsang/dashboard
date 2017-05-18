@@ -150,6 +150,7 @@
 
     var pcval = [];
 
+    var selectdata;
     //初始化编辑器
     editor.on('open displayOrder', function (e, mode, action) {
         if (mode === 'main' && action !== 'remove') {
@@ -240,7 +241,7 @@
                 processing: true,
                 //dom: 'Bfrtip',
                 lengthChange: false,
-                select: false,
+                select: true,
                 order: [[0, "asc"]],
                 columns: [
                 { "data": "Line_Id"},
@@ -249,11 +250,6 @@
                 { "data": "Supplier" },
                 { "data": "Color"},
                 { "data": "Size" },
-                { "data": "BinCode" },
-                { "data": "StockQty" },
-                { "data": "AdjQty", "defaultContent": "编辑数量", "className": 'editable'},
-                { "data": "NewQty" },
-
                 ],
 
                 language: {
@@ -290,23 +286,24 @@
     editor.on('initCreate', function (e) {
         
         getproductlist(e);
-        if (editor.field('InventSchedule_Type').val() === "部分盘点")
-            alert('sss');
+        $(":button.btn.btn-default.Freezer").hide()
+        //$(":button.btn.btn-default.Freezer").attr("disabled", true)
 
     });
     //修改数据
     editor.on('initEdit', function (e, node, data) {
-
-
         //搜索条件下拉框
         getproductlist(e, data);
 
-        var param = {};
+        var param = {},condition = '';
+        condition = 'v.Product_ID=x.Product_Id and v.Color_ID =x.Color_Id and v.Size_ID=x.Size_Id and x.InventSchedule_Id= ' + editor.field('InventSchedule_Id').val()
         param.token = SecurityManager.generate();
         param.username = SecurityManager.username;
-//        param.adjuniqueid = editor.field("UniqueId").val();
-        /*$.ajax({
-            "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_GetADJDetail",
+        param.tbName = 'V_GatewayPayment_SearchProduct v inner join XGPC_InventSchedule_Detail x on v.Product_ID=x.Product_Id';
+        param.colName = '*';
+        param.whName = condition;
+        $.ajax({
+            "url": sysSettings.domainPath + "Raymsp_GatewaypaymentGetData",
             "type": "POST",
             "async": true,
             "crossDomain": true,
@@ -315,38 +312,72 @@
             "data": JSON.stringify(param),
             "success": function (data) {
                 data = data.ResultSets[0]
+                
                 for (var i = 0; i < data.length; i++) {
-                    data[i].Line_Id = i+1;
-                    data[i].NewQty = data[i].AdjQty + data[i].StockQty;
-                    data[i].bh_uniqueid = data[i].BinHeader
-                    data[i].color_uniqueid = data[i].ColorData;
-                    data[i].PurchasePrice = data[i].landed_price;
-                    data[i].RetailPrice = data[i].price_retail;
-                    data[i].product_uniqueid = data[i].Product;
-                    data[i].size_uniqueid = data[i].SizeData;
+                    data[i].Line_Id = i + 1;
+                    data[i].inventschedule_id = data[i].InventSchedule_Id;
+                    data[i].product_id = data[i].Product_ID;
+                    data[i].color_id = Number(data[i].Color_ID);
+                    data[i].size_id = data[i].Size_ID;
+
                 }
-                pctable.clear().draw();//重置产品明细列表
-                data.forEach(function (node) {
-                    pctable.row.add(node);
-                    if (editor.field("approved").val() === "未确认") {
-                        getpcval(node);
+                //pctable.clear().draw();//重置产品明细列表
+                //getpcval(data);
+                pctable.rows.add(data).draw();
+                getpcval(pctable.rows().data());
+
+                if (table.row('.selected').data().InventSchedule_Type === "部分盘点") {
+                    if (table.row('.selected').data().InventScheduleStatus_Code === "保存") {
+                        editor.enable();
+                        $(":button.btn.btn-default.Freezer").show()
+                        $(":button.btn.btn-default.Freezer").attr("disabled", false)
+                        $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "block");
+                    } else if (table.row('.selected').data().InventScheduleStatus_Code === "冻结") {
+                        editor.disable();
+                        $(":button.btn.btn-default.Freezer").show()
+                        $(":button.btn.btn-default.Freezer").attr("disabled", false)
+                        $("a#li-tab3,a#li-tab2").css("display", "none")
+                    } else if (table.row('.selected').data().InventScheduleStatus_Code === "取消") {
+                        editor.disable();
+                        $(":button.btn.btn-default.Freezer").hide()
+                        $(":button.btn.btn-default.Freezer").attr("disabled", true)
+                        $("a#li-tab3,a#li-tab2").css("display", "none")
+                    } else {
+                        editor.disable();
+                        $(":button.btn.btn-default.Freezer").hide()
+                        $("a#li-tab3,a#li-tab2").css("display", "none")
                     }
-                })
-                pctable.draw();
+                    //editor.enable();
+                    //$("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "block");
+                } else if (table.row('.selected').data().InventSchedule_Type === "全部盘点") {
+                    if (table.row('.selected').data().InventScheduleStatus_Code === "保存") {
+                        editor.enable();
+                        $(":button.btn.btn-default.Freezer").show()
+                        $(":button.btn.btn-default.Freezer").attr("disabled", false)
+                        $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "none");
+                    } else if (table.row('.selected').data().InventScheduleStatus_Code === "冻结") {
+                        editor.disable();
+                        $(":button.btn.btn-default.Freezer").show()
+                        $(":button.btn.btn-default.Freezer").attr("disabled", false)
+                        $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "none");
+                    } else if (table.row('.selected').data().InventScheduleStatus_Code === "取消") {
+                        editor.disable();
+                        $(":button.btn.btn-default.Freezer").hide()
+                        $(":button.btn.btn-default.Freezer").attr("disabled", true)
+                        $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "none");
+                    } else {
+                        $(":button.btn.btn-default.Freezer").hide()
+                        $(":button.btn.btn-default.Freezer").attr("disabled", true)
+                        editor.disable();
+                        $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "none");
+                    }
 
-                if (editor.field("approved").val() === "未确认") {
-                    editor.enable();
-                    $("a#li-tab3,a#li-tab2").css("display", "block");
-                } else {
-                    editor.disable();
-                    $("a#li-tab3,a#li-tab2").css("display", "none")
-                    $('#ProductDetailTable').off('click', 'tbody td.editable');
+
                 }
-
             }
 
 
-        }); */
+        });
 
     });
     editor.dependent('Store_Code', function (val, data, callback) {
@@ -471,6 +502,15 @@
         ],
     });
 
+    //获取编辑的行号
+    table.on('select', function (e, dt, type, indexes) {
+        if (type === 'row') {
+            selectdata = table.rows(indexes).data();
+            selectdata.index = indexes;
+            selectdata.page = selectdata.page();
+        }
+
+    });
     //定义 初始化主表数据
     function initialtable(store) {
         var param = {
@@ -507,8 +547,84 @@
     function tab1btn(e, mode, action) {
         editor.buttons([
        {
+           label: function () {
+               if (editor.field("InventScheduleStatus_Code").val() === "保存") {
+                   //this.remove();
+                   return '冻结库存 '
+               } else if (editor.field("InventScheduleStatus_Code").val() === "冻结") {
+                   return '取消冻结 '
+               }
+           }, fn: function () {
+               var vstatus = ["计划", "保存", "取消", "完成"]
+               if (editor.field("InventScheduleStatus_Code").val() === "保存") {
+                   var param = {};
+                   param.token = SecurityManager.generate();
+                   param.username = SecurityManager.username;
+                   param.inventschedule_id = editor.field('InventSchedule_Id').val(),
+                   param.store_code_id = editor.field('Store_Code_Id').val(),
+                   param.count_number = 1,
+                   param.inventschedule_date = editor.field('InventSchedule_Date').val(),
+                   param.inventschedulestatus_id = 3,
+                   param.inventschedule_type = editor.field('InventSchedule_Type').val()
+                   $.ajax({
+                       "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_InventSchedule",
+                       "async": true,
+                       "crossDomain": true,
+                       "type": "POST",
+                       "dataType": "json",
+                       "contentType": "application/json; charset=utf-8",
+                       "data": JSON.stringify(param),
+                       "success": function (data) {
+                           if (Number(editor.field('InventSchedule_Id').val()) === data.ResultSets[0][0].InventSchedule_Id) {
+                               data.ResultSets[0][0].Id = selectdata[0].Id;
+                               data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
+                               data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
+                               table.row(selectdata.index).data(data.ResultSets[0][0]);
+                               table.page(selectdata.page).draw('page');
+                               editor.field('Session_Id').val(data.ResultSets[0][0].Session_Id);
+                               editor.field('InventScheduleStatus_Code').val('冻结');
+                               editor.message('库存冻结成功').true;
+                           }
+                       }
+                   })
+               } else if (editor.field("InventScheduleStatus_Code").val() === "冻结") {
+                   var param = {};
+                   param.token = SecurityManager.generate();
+                   param.username = SecurityManager.username;
+                   param.inventschedule_id = editor.field('InventSchedule_Id').val(),
+                   param.store_code_id = editor.field('Store_Code_Id').val(),
+                   param.count_number = 1,
+                   param.inventschedule_date = editor.field('InventSchedule_Date').val(),
+                   param.inventschedulestatus_id = 4,
+                   param.inventschedule_type = editor.field('InventSchedule_Type').val()
+                   $.ajax({
+                       "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_InventSchedule",
+                       "async": true,
+                       "crossDomain": true,
+                       "type": "POST",
+                       "dataType": "json",
+                       "contentType": "application/json; charset=utf-8",
+                       "data": JSON.stringify(param),
+                       "success": function (data) {
+                               if (Number(editor.field('InventSchedule_Id').val()) === data.ResultSets[0][0].InventSchedule_Id) {
+                                   data.ResultSets[0][0].Id = selectdata[0].Id;
+                                   data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
+                                   data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
+                                   table.row(selectdata.index).data(data.ResultSets[0][0]);
+                                   table.page(selectdata.page).draw('page');
+                                   editor.field('InventScheduleStatus_Code').val('取消');
+                                   editor.message('冻结已取消').true;
+                           }
+                       }
+                   })
+
+               }
+           }, className: "Freezer"
+       },
+       {
            label: '保存', className: 'btn btn-primary', fn: function () {
-               if (editor.field("InventScheduleStatus_Code").val() === ("计划" || "冻结" || "取消" || "完成")) {
+               var vstatus=["计划", "冻结", "取消", "完成"]
+               if (vstatus.indexOf(editor.field("InventScheduleStatus_Code").val())!==-1) {
                    this.blur();
                } else {
                    var param = {};
@@ -529,31 +645,51 @@
                        "contentType": "application/json; charset=utf-8",
                        "data": JSON.stringify(param),
                        "success": function (data) {
-                           if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                               if (editor.field('InventSchedule_Id').val() === null) {
+                           if (editor.field('InventSchedule_Id').val() === '') {
                                    data.ResultSets[0][0].Id = table.rows()[0].length + 1;
                                    data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
                                    data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
                                    table.row.add(data.ResultSets[0][0]).draw();
+                                   table.rows().deselect().page('last').draw('page');
+                                   table.page('last').draw('page');
+                                   table.row(':eq(-1)', { page: 'current' }).select();
                                    editor.field('InventSchedule_Id').val(data.ResultSets[0][0]["InventSchedule_Id"]);
-
-                               }
+                                   editor.field('InventScheduleStatus_Code').val('保存');
 
                                if (data.ResultSets[0][0]["Session_Id"] !== null) {
-                                   editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"])
+                                   editor.field('Session_Id').val(data.ResultSets[0][0]["Session_Id"]);
+                               }
+                               if (data.ResultSets[0][0]["InventSchedule_Type"] === "T") {
+                                   $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "none");
                                }
                                editor.message('保存成功').true;
                                return false;
 
+                           } else {
+                               if (Number(editor.field('InventSchedule_Id').val()) === data.ResultSets[0][0].InventSchedule_Id) {
+                                   data.ResultSets[0][0].Id = selectdata[0].Id;
+                                   data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
+                                   data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
+                                   table.row(selectdata.index).data(data.ResultSets[0][0]);
+                                   table.page(selectdata.page).draw('page');
+                                   if (data.ResultSets[0][0]["InventSchedule_Type"] === "T") {
+                                       $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "none");
+                                   } else {
+                                       $("a#li-tab4,a#li-tab3,a#li-tab2").css("display", "block");
+                                   }
+                                   editor.message('更新成功').true;
+                               } else {
+
+                               }
                            }
                            }
                    })
 
                }
 
-           }
+           }, tabIndex:2
        },
-      { label: '取消', fn: function () { this.blur(); } }
+      { label: '取消', fn: function () { this.blur(); }, tabIndex: 3 }
         ])
     };
     //定义HTML Tab
@@ -603,10 +739,6 @@
                             '<th>供应商</th>' +
                             '<th>颜色</th>' +
                             '<th>尺码</th>' +
-                            '<th>货区</th>' +
-                            '<th>库存数量</th>' +
-                            '<th>调整数量</th>' +
-                            '<th>新数量</th>' +
                             '</tr>' +
                             '</thead>' +
                             '</table>' +
@@ -639,13 +771,13 @@
                 switch (activeTab) {
                     //参数设置 Tab1
                     case 'li-tab1': {
-                        tab1btn()
+                        tab1btn(e,mode,action)
                         editor.message('');
                         break;
                     }
                         //产品查询条件 Tab2
                     case 'li-tab2': {
-                        if (editor.field('Session_Id').val().length > 0 && editor.field('InventScheduleStatus_Code').val() === "保存") {
+                        if (editor.field('InventSchedule_Type').val()==="P" && editor.field('InventScheduleStatus_Code').val() === "保存") {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
@@ -664,13 +796,13 @@
                                             if (vnode.length - 1 > 0) {
                                                 var i = vnode.length - 1;
                                                 if (vnode[i] === node) {
-                                                    condition = condition + node + '=' + "'" + editor.field(node).val() + "'"
+                                                    condition = condition + node + ' like' + "'" + editor.field(node).val() + '\%' +"'"
                                                 } else {
-                                                    condition = condition + node + '=' + "'" + editor.field(node).val() + "'" + ' and '
+                                                    condition = condition + node + ' like' + "'" + editor.field(node).val() + '\%' + "'" + ' and '
                                                 }
 
                                             } else {
-                                                condition = condition + node + '=' + "'" + editor.field(node).val() + "'"
+                                                condition = condition + node + ' like' + "'" + editor.field(node).val() + '\%' + "'"
                                             }
 
                                         });
@@ -726,59 +858,54 @@
                     }
                         //产品列表 Tab3
                     case 'li-tab3': {
-                        if (editor.field("Session_Id").val().length > 0 && editor.field('approved').val() === "未确认") {
+                        if (editor.field('InventSchedule_Type').val() === "P" && editor.field('InventScheduleStatus_Code').val() === "保存") {
                             editor.buttons([
                                 {
                                     extend: 'tabbtn', label: '确定', className: 'prodbtn', fn: function () {
                                         if (ptable.rows('.selected', { select: true }).data().length > 0) {
                                             var plist = ptable.rows('.selected', { select: true }).data();
-                                            pctable.clear();
+                                            var pclist = pctable.rows().data();
+                                            //pctable.clear();
                                             pcval = [];
                                             for (var i = 0; i < plist.length; i++) {
-                                                plist[i].Line_Id = i + 1;
-                                                plist[i].ProductCode = plist[i].PurchasePrice;
-                                                plist[i].StockQty = plist[i].Bin_Qty_Stocks;
-                                                plist[i].AdjQty = 0;
-                                                plist[i].NewQty = '';
-                                                plist[i].reason_id = editor.field("reason_id").val();
-                                                plist[i].Session_Id = editor.field("Session_Id").val();
-                                                plist[i].product_id = plist[i].Product_ID;
-                                                plist[i].color_id = plist[i].Color_ID;
-                                                plist[i].size_id = plist[i].Size_ID;
-                                                plist[i].color_uniqueid = plist[i].Color_UniqueId;
-                                                plist[i].size_uniqueid = plist[i].Size_UniqueId;
-                                                plist[i].product_uniqueid = plist[i].Product_UniqueId;
-                                                plist[i].adjhead_uniqueid = editor.field("UniqueId").val();
-                                                var param = {};
-                                                param.token = SecurityManager.generate();
-                                                param.username = SecurityManager.username;
-                                                param.store_code_id = editor.field("store_code_id").val();
-                                                param.product_id = plist[i].Product_ID;
-                                                param.color_id = plist[i].Color_ID;
-                                                param.size_id = plist[i].Size_ID;
-                                                $.ajax({
-                                                    "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_GetBinIdForTransferSend",
-                                                    "type": "POST",
-                                                    "async": false,
-                                                    "crossDomain": true,
-                                                    "dataType": "json",
-                                                    "contentType": "application/json; charset=utf-8",
-                                                    "data": JSON.stringify(param),
-                                                    "success": function (data) {
-                                                        data = data.ResultSets[0][0]
-                                                        plist[i].bin_id = data.bin_id
-                                                        plist[i].BinCode = data.bin_code
-                                                        plist[i].bh_uniqueid = data.UniqueId
-                                                    }
-                                                })
+                                                if (pclist.length) {
+                                                    for (var x = 0; x < pclist.length; x++) {
+                                                        if (plist[i].Product_UniqueId === pclist[x].Product_UniqueId) {
+                                                            plist.splice(i, 1);
+                                                            i=i-1;
+                                                            break;
+                                                        } else if (pclist.length-x>1) {
+                                                            continue;
 
-                                                pctable.row.add(plist[i])
-                                                getpcval(plist[i])
+                                                        }else {
+                                                            plist[i].Line_Id = pctable.rows()[0].length + i+1;
+                                                            plist[i].line_id = plist[i].Line_Id;
+                                                            plist[i].inventschedule_id = Number(editor.field("InventSchedule_Id").val());
+                                                            plist[i].product_id = plist[i].Product_ID;
+                                                            plist[i].color_id = plist[i].Color_ID;
+                                                            plist[i].size_id = plist[i].Size_ID;
+                                                            plist[i].store_code_id = editor.field("Store_Code_Id").val();
+
+                                                        }
+                                                    };
+                                                } else {
+                                                    plist[i].Line_Id = i + 1;
+                                                    plist[i].line_id = plist[i].Line_Id;
+                                                    plist[i].inventschedule_id = Number(editor.field("InventSchedule_Id").val());
+                                                    plist[i].product_id = plist[i].Product_ID;
+                                                    plist[i].color_id = plist[i].Color_ID;
+                                                    plist[i].size_id = plist[i].Size_ID;
+                                                    plist[i].store_code_id = editor.field("Store_Code_Id").val();
+                                                }
+
+                                                //getpcval(plist[i]);
                                                 //console.log(index);
 
 
                                             }
-                                            pctable.draw();
+                                            pctable.rows.add(plist).draw();
+                                            getpcval(pclist);
+                                            //pctable.draw();
                                             $('a[href="#tab-4"]').tab('show');
 
                                         }
@@ -806,22 +933,36 @@
                         //产品明细调整 Tab 4
                     case 'li-tab4': {
                         //$('.DTE_Form_Info').appendTo('#ProductDetailTable_wrapper .col-sm-6:eq(0)');
-                        if (editor.field("Session_Id").val().length > 0 && editor.field('approved').val() === "未确认") {
+                        if (editor.field('InventSchedule_Type').val() === "P" && editor.field('InventScheduleStatus_Code').val() === "保存") {
                             editor.buttons([
                                 {
+                                    extend: 'tabbtn', label: '删除产品', className: 'pcbtn', fn: function () {
+                                        pctable.rows('.selected').remove()
+                                        var loop = pctable.rows().data().length;
+                                        var pclist = pctable.rows().data();
+                                        for (i = 0; i < loop; i++) {
+                                            pclist[i].Line_Id = i + 1;
+                                            pclist[i].line_id = pclist[i].Line_Id;
+                                        }
+                                        pctable.clear();
+                                        pctable.rows.add(pclist).draw();
+                                        getpcval(pclist);
+                                    }
+                                },
+                                {
                                     extend: 'tabbtn', label: '保存', className: 'pcbtn', fn: function () {
-                                        if (editor.field('Session_Id').val().length > 0 && editor.field('approved').val() !== "未确认") {
+                                        if (editor.field('InventSchedule_Type').val() === "P" && editor.field('InventScheduleStatus_Code').val() !== "保存") {
                                            return this.blur();
                                         }
-                                        else if (pcval.length>0) {
+                                        else if (pcval.length > 0) {
+
                                             var param = {};
                                             param.token = SecurityManager.generate();
                                             param.username = SecurityManager.username;
-                                            param.Session_Id = Number(editor.field("Session_Id").val());
-                                            param.store_code_id = editor.field("store_code_id").val();
+                                            param.store_code_id = Number(editor.field("Store_Code_Id").val());
                                             param.PCD = pcval;
                                             $.ajax({
-                                                "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_ADJ_Detail",
+                                                "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_InventSchedule_Detail",
                                                 "type": "POST",
                                                 "async": true,
                                                 "crossDomain": true,
@@ -830,14 +971,14 @@
                                                 "data": JSON.stringify(param),
                                                 "success": function (data) {
                                                     if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                                                        data = data.ResultSets[0];
+                                                        //data = data.ResultSets[0];
 
-                                                        pctable.clear();//重置产品明细列表
-                                                        data.forEach(function (node) {
-                                                            node.NewQty = node.AdjQty + node.StockQty;
-                                                            pctable.row.add(node);
-                                                        })
-                                                        pctable.draw();
+                                                        //pctable.clear();//重置产品明细列表
+                                                        //data.forEach(function (node) {
+                                                            //node.NewQty = node.AdjQty + node.StockQty;
+                                                            //pctable.row.add(node);
+                                                        //})
+                                                        //pctable.draw();
                                                         editor.message('保存成功').true;
 
                                                     }
@@ -854,22 +995,20 @@
                                 {
                                     extend: 'tabbtn', label: '批准', className: 'pcbtn', fn: function () {
 
-                                        if (editor.field('Session_Id').val().length > 0 && editor.field('approved').val() !== "未确认") {
+                                        if (editor.field('InventSchedule_Type').val() === "P" && editor.field('InventScheduleStatus_Code').val() !== "保存") {
                                                 this.blur();
                                             } else {
                                             var param = {};
                                             param.token = SecurityManager.generate();
                                             param.username = SecurityManager.username;
-                                            param.Session_Id = editor.field('Session_Id').val(),
-                                            param.store_code_id = editor.field('store_code_id').val(),
-                                            param.season_id = -9,
-                                            param.reason_id = editor.field('reason_id').val(),
-                                            param.approved = 1,
-                                            param.creation_date = editor.field('creation_date').val(),
-                                            param.modified_date = editor.field('modified_date').val()
-                                            param.ref_Session_Id = editor.field('ref_Session_Id').val(),
+                                            param.inventschedule_id = editor.field('InventSchedule_Id').val(),
+                                            param.store_code_id = editor.field('Store_Code_Id').val(),
+                                            param.count_number = 1,
+                                            param.inventschedule_date = editor.field('InventSchedule_Date').val(),
+                                            param.inventschedulestatus_id = 3,
+                                            param.inventschedule_type = editor.field('InventSchedule_Type').val(),
                                             $.ajax({
-                                                "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_ADJ_header",
+                                                "url": sysSettings.domainPath + "RaymSp_Gatewaypayment_InventSchedule",
                                                 "async": true,
                                                 "crossDomain": true,
                                                 "type": "POST",
@@ -878,14 +1017,19 @@
                                                 "data": JSON.stringify(param),
                                                 "success": function (data) {
                                                     if (typeof (data.ResultSets[0][0]) !== 'undefined') {
-                                                        table.ajax.reload().draw();
-                                                        if (data.ResultSets[0][0].approved === "Y") {
-                                                            editor.field('approved').val('已确认');
+
+                                                        if (data.ResultSets[0][0].InventScheduleStatus_Code === "F") {
+                                                            editor.field('Session_Id').val(data.ResultSets[0][0].Session_Id);
+                                                            editor.field('InventScheduleStatus_Code').val('冻结');
+                                                            data.ResultSets[0][0].Id = selectdata[0].Id;
+                                                            data.ResultSets[0][0].Qty_Scan = data.ResultSets[0][0].qty_scan;
+                                                            data.ResultSets[0][0].Store_Code = data.ResultSets[0][0].store_code;
+                                                            table.row(selectdata.index).data(data.ResultSets[0][0]);
+                                                            table.page(selectdata.page).draw('page');
                                                             editor.disable();
                                                             $("a#li-tab3,a#li-tab2").css("display", "none");
-                                                            $('#ProductDetailTable').off('click', 'tbody td.editable');
                                                             $('a[href="#tab-1"]').tab('show');
-                                                            editor.message('审批成功').true;
+                                                            editor.message('冻结成功').true;
                                                             return false;
 
                                                         }
@@ -922,8 +1066,10 @@
         // Get existing options
         if (e.type === 'initEdit') {
             exdata = data
-            if (exdata.InventScheduleStatus_Code !== '保存') {
+            if (exdata.InventScheduleStatus_Id !== 1) {
                 editor.disable();
+            } else {
+                editor.enable();
             }
         } else if (e.type === 'initCreate') {
             editor.field("InventScheduleStatus_Code").val('新建')
@@ -963,8 +1109,12 @@
                         }
                         case 'Store': {
                             if (typeof (exdata.Store_Code_Id) !== 'undefined'/** 判断是新建还是编辑 **/) {
-                                selectStore.unshift({ label: data[item].label, value: data[item].ext1 });
-
+                                if (exdata.Store_Code_Id === Number(data[item].ext1)) {
+                                    selectStore.unshift({ label: data[item].label, value: data[item].ext1 });
+                                } else {
+                                    selectStore.push({ label: data[item].label, value: data[item].ext1 });
+                                }
+                                break;
                             } else {
                                 selectStore.push({ label: data[item].label, value: data[item].ext1 });
                             }
@@ -1000,56 +1150,20 @@
     function getpcval(val, key) {
         if (typeof (key) !== 'undefined') {
             val.DT_RowId = key;
-            val.NewQty = Number(val.AdjQty) + Number(val.StockQty);
         }
         var nval = {};
-        nval.Session_Id = val.Session_Id;
-        nval.line_id = Number(val.Line_Id);
-        nval.product_id = val.product_id;
-        nval.color_id = Number(val.color_id);
-        nval.size_id = val.size_id;
-        nval.loose_qty_onhand = Number(val.StockQty);
-        nval.loose_qty_adj = Number(val.AdjQty);
-        nval.landed_price = Number(val.PurchasePrice);
-        nval.price_retail = Number(val.RetailPrice);
-        nval.bin_id = val.bin_id;
-        nval.binheader = val.bh_uniqueid;
-        nval.product = val.product_uniqueid;
-        nval.color = val.color_uniqueid;
-        nval.size = val.size_uniqueid;
-
-        if (pcval.length > 0) {
-            for (x in pcval) {
-
-                if (pcval[x].Session_Id !== nval.Session_Id) {
-                    pcval = [];
-                    pcval.push(nval);
-                    break;
-                }
-                else if (pcval[x].product_id === nval.product_id && pcval[x].color_id === nval.color_id && pcval[x].size_id === nval.size_id) {
-                    if (nval.qty !== 0) {
-                        pcval.splice(x, 1, nval);
-                    } else {
-                        pcval.splice(x, 1);
-                    }
-
-                } else if (pcval.length - 1 > 0) {
-                    continue;
-                } else {
-                    if (nval.Qty !== 0) {
-                        pcval.push(nval);
-                    }
-                }
-            }
+        pcval = [];
+        for (i = 0;i<val.data().length; i++){
+            nval.inventschedule_id = val.data()[i].inventschedule_id;
+            nval.line_id = Number(val.data()[i].Line_Id);
+            nval.product_id = val.data()[i].product_id;
+            nval.color_id = Number(val.data()[i].color_id);
+            nval.size_id = val.data()[i].size_id;
+            pcval.push(nval);
+            nval = {};
         }
-        else {
-            if (nval.qty !== 0) {
-                pcval.push(nval);
-            }
-        }
-        console.log(pcval)
-        pctable.draw();
-        return val;
+
+
     }
 });
 
