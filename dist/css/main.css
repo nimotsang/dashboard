@@ -147,11 +147,17 @@ div.multi-column-feild:after {
 }*/
 div.product-column {
 
-    width: 75%;
+    width: 90%;
     height:auto;
     position:relative;
 }
 
+/*div.product-detail {
+
+    width: 100%;
+    height:auto;
+    position:relative;
+}*/
 
 div.product-column-body{
 
