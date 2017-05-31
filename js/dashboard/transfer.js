@@ -364,21 +364,25 @@
             "data": "Reason_Code", "render": function (data, type, row) {
                 if (data.length > 0) {
                     return data.substring(0, 10);
-                }
+                } else { return '数据未定义' }
             }
         },
         {
             "data": "transfer_date", "render": function (data, type, row) {
-                if (data.length > 0) {
-                    return data.substring(0, 10);
-                }
+
+                    if (data && data.length > 0) {
+                        return data.substring(0, 10);
+                    }
+
             }
         },
         {
             "data": "posting_date", "render": function (data, type, row) {
-                if (data.length > 0) {
-                    return data.substring(0, 10);
-                }
+
+                    if (data && data.length > 0) {
+                        return data.substring(0, 10);
+                    }else {return '数据未定义'}
+
             }
         }
         ],
