@@ -1158,8 +1158,7 @@
             val.DT_RowId = key;
         }
         var nval = {};
-        pcval = [];
-       for (i = 0;i<val.length; i++){
+
             nval.pSessionId = val.session_id;
             nval.pStoreCodeId = Number(val.store_code_id);
             nval.pSeqId = val.seq_id;
@@ -1171,9 +1170,7 @@
             nval.pIsCasePack = Number(val.color_id);
             nval.pUserName = val.size_id;
             nval.pMachineName = val.size_id;
-            pcval.push(nval);
-           nval = {};
-        }
+
        $.ajax({
            "url": sysSettings.domainPath + "RaymSP_Gatewaypayment_SaveAdjustment",
            "type": "POST",
@@ -1181,7 +1178,7 @@
            "crossDomain": true,
            "dataType": "json",
            "contentType": "application/json; charset=utf-8",
-           "data": JSON.stringify(param),
+           "data": JSON.stringify(nval),
            "success": function (data) {
                data = data.ResultSets[0]
                //for (var item in data) {
